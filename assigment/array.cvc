@@ -5,6 +5,7 @@ extern void printSpaces(int n);
 extern void printNewlines(int n);
 extern int scanInt();
 extern float scanFloat();
+
 export void printIntVec(int[n] vec) {
   int i;
   i = 0;
@@ -85,20 +86,43 @@ export void scanIntMat(int[m, n] mat) {
   }
 }
 
+export void scanFloatMat(float[m, n] mat) {
+  int i;
+  int j;
+  i = 0;
+  while (i < m) {
+    j = 0;
+    while (j < n) {
+      mat[i, j] = scanFloat();
+      j = j + 1;
+    }
+    i = i + 1;
+  }
+}
+
  // Matrix multiply: c = a * b
  // Dimensions are expected to be: a[m,n], b[n,p], c[m,p].
  // The function signature uses generic symbols; caller must pass matching sizes.
 
- void matMul(float[m, n] a, float[o, p] b, float[q, l] c) {
-   // assume n==o and q==m and l==p (per assignment intent)
-   for (int i = 0, m) {
-     for (int j = 0, p) {
-       float acc = 0.0;
-       for (int k = 0, n) {
+export void matMul(float[m, n] a, float[o, p] b, float[q, l] c) {
+   int i;
+   int j;
+   int k;
+   float acc;
+   i = 0;
+   while (i < m) {
+     j = 0;
+     while (j < p) {
+       acc = 0.0;
+       k = 0;
+       while (k < n) {
           acc = acc + a[i, k] * b[k, j];
+          k = k + 1;
        }
        c[i, j] = acc;
+       j = j + 1;
      }
+     i = i + 1;
    }
  }
 
