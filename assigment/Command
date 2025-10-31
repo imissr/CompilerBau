@@ -23,3 +23,29 @@ cat test_array.cvc | ../civicCompiler/bin/civcc > test_array.s && \
 ../civicCompiler/bin/civas array.s -o array.o && \
 ../civicCompiler/bin/civas test_array.s -o test_array.o && \
 ../civicCompiler/bin/civvm array.o test_array.o
+
+
+
+ civicCompiler/bin/civcc assigment/core.cvc -o assigment/out/core.cvc
+
+ civicCompiler/bin/civcc assigment/core.cvc -o assigment/out/core.s
+
+ civicCompiler/bin/civas assigment/out/core.s -o assigment/out/core.o
+
+ civicCompiler/bin/civcc assigment/test_core.cvc -o assigment/out/test_core.s
+
+ civicCompiler/bin/civas assigment/out/test_core.s -o assigment/out/test_core.o
+
+ civicCompiler/bin/civvm assigment/out/test_co
+test_core.o  test_core.s
+
+20:02  civicCompiler/bin/civvm assigment/out/test_core.o
+error: Unable to find 'gcd' in any of the modules
+
+ civicCompiler/bin/civvm assigment/out/test_core.o assigment/out/
+core.o       core.s       test_core.o  test_core.s
+
+ civicCompiler/bin/civvm assigment/out/test_core.o assigment/out/core.
+core.o  core.s
+
+civicCompiler/bin/civvm assigment/out/test_core.o assigment/out/core.o
