@@ -1,0 +1,10 @@
+#include "civic.h"
+extern void fibs(int n);
+extern void primes(int n);
+
+
+export int main() {
+fibs(10); // 0 1 1 2 3 5 8 13 21 34
+primes(10); // 2 3 5 7 11 13 17 19 23 29
+return 0;
+}

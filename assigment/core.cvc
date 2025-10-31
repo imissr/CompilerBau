@@ -1,0 +1,45 @@
+// core.cvc
+
+int gcd(int a, int b) {
+  while (b != 0) {
+    int r = a % b;
+    a = b;
+    b = r;
+  }
+  return a;
+}
+
+int fac(int n) {
+  int res = 1;
+  for (int i = 2, n + 1) {
+    res = res * i;
+  }
+  return res;
+}
+
+int fib(int n) {
+  // 0->0, 1->1
+  if (n <= 1) return n;
+  int a = 0;
+  int b = 1;
+  for (int i = 2, n + 1) {
+    int c = a + b;
+    a = b;
+    b = c;
+  }
+  return b;
+}
+
+bool isprime(int n) {
+  if (n <= 1) return false;
+  1
+      // 2,3
+      if (n <= 3) return true;
+  if (n % 2 == 0) return false;
+
+  for (int i = 3, n + 1, 2) {
+    if (i * i > n) return true;
+    if (n % i == 0) return false;
+  }
+  return true;
+}

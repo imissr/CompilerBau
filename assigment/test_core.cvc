@@ -1,0 +1,15 @@
+#include "civic.h"
+extern int gcd(int a, int b);
+extern int fac(int n);
+extern int fib(int n);
+extern bool isprime(int n);
+
+
+export int main() {
+printInt(gcd(48,18)); printNewlines(1); // 6
+printInt(fac(5)); printNewlines(1); // 120
+printInt(fib(10)); printNewlines(1); // 55
+printInt((int)isprime(29)); printNewlines(1); // 1
+printInt((int)isprime(42)); printNewlines(1); // 0
+return 0;
+}
