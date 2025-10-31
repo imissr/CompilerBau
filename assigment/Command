@@ -1,0 +1,25 @@
+
+cat core.cvc | ../civicCompiler/bin/civcc > core.s - Compile core.cvc to assembly
+cat test_core.cvc | ../civicCompiler/bin/civcc > test_core.s - Compile test_core.cvc to assembly
+../civicCompiler/bin/civas core.s -o core.o - Assemble to object file
+../civicCompiler/bin/civas test_core.s -o test_core.o - Assemble to object file
+../civicCompiler/bin/civvm core.o test_core.o - Run both object files together
+
+
+cd /home/imissoldgaren/GIT_Project/CompilerBau/assigment && \
+cat core.cvc | ../civicCompiler/bin/civcc > core.s && \
+cat coreio.cvc | ../civicCompiler/bin/civcc > coreio.s && \
+cat test_coreio.cvc | ../civicCompiler/bin/civcc > test_coreio.s && \
+../civicCompiler/bin/civas core.s -o core.o && \
+../civicCompiler/bin/civas coreio.s -o coreio.o && \
+../civicCompiler/bin/civas test_coreio.s -o test_coreio.o && \
+../civicCompiler/bin/civvm core.o coreio.o test_coreio.o
+
+
+
+cd /home/imissoldgaren/GIT_Project/CompilerBau/assigment && \
+cat array.cvc | ../civicCompiler/bin/civcc > array.s && \
+cat test_array.cvc | ../civicCompiler/bin/civcc > test_array.s && \
+../civicCompiler/bin/civas array.s -o array.o && \
+../civicCompiler/bin/civas test_array.s -o test_array.o && \
+../civicCompiler/bin/civvm array.o test_array.o
