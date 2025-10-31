@@ -1,4 +1,4 @@
-// core_fixed.cvc - Fixed version with proper CiviC syntax
+
 export int gcd(int a, int b) {
   int x;
   int y;
