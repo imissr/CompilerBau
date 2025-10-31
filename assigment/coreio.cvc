@@ -1,34 +1,41 @@
-#include "civic.h"
-
-
-
+// coreio.cvc
+extern void printInt(int v);
+extern void printSpaces(int n);
+extern void printNewlines(int n);
 extern int fib(int n);  // from core.cvc
-void fibs(int n) {
-  for (int i = 0, n) {
+export void fibs(int n) {
+  int i;
+  i = 0;
+  while (i < n) {
     printInt(fib(i));
     if (i + 1 < n) printSpaces(1);
+    i = i + 1;
   }
   printNewlines(1);
 }
-
-
-
-void primes(int n) {
-  // Nested clone of isprime (local to primes only)
-  bool isprime_local(int x) {
-    if (x <= 1) return false;
-    if (x <= 3) return true;
-    if (x % 2 == 0) return false;
-    for (int k = 3, x + 1, 2) {
-      if (k * k > x) return true;
-      if (x % k == 0) return false;
+export void primes(int n) {
+  int count;
+  int cand;
+  bool isprime_local(int m) {
+    int k;
+    bool div;
+    if (m < 2) return false;
+    if (m == 2) return true;
+    if ((m % 2) == 0) return false;
+    k = 3;
+    div = false;
+    while (k * k <= m && !div) {
+      if ((m % k) == 0)
+        div = true;
+      else
+        k = k + 2;
     }
-    return true;
+    return !div;
   }
-  int count = 0;
-  int cand = 2;
+  count = 0;
+  cand = 2;
   while (count < n) {
-    2 if (isprime_local(cand)) {
+    if (isprime_local(cand)) {
       printInt(cand);
       count = count + 1;
       if (count < n) printSpaces(1);

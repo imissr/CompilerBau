@@ -1,73 +1,89 @@
-/ array.cvc
-#include "civic.h"
-
-
-    void printIntVec(int[n] vec) {
-  for (int i = 0, n) {
+// array.cvc
+extern void printInt(int v);
+extern void printFloat(float v);
+extern void printSpaces(int n);
+extern void printNewlines(int n);
+extern int scanInt();
+extern float scanFloat();
+export void printIntVec(int[n] vec) {
+  int i;
+  i = 0;
+  while (i < n) {
     printInt(vec[i]);
     if (i + 1 < n) printSpaces(1);
+    i = i + 1;
   }
   printNewlines(1);
 }
-
-
-void printFloatVec(float[n] vec) {
-  for (int i = 0, n) {
+export void printFloatVec(float[n] vec) {
+  int i;
+  i = 0;
+  while (i < n) {
     printFloat(vec[i]);
     if (i + 1 < n) printSpaces(1);
+    i = i + 1;
   }
   printNewlines(1);
 }
-
-
-void printIntMat(int[m, n] mat) {
-  for (int i = 0, m) {
-    for (int j = 0, n) {
+export void printIntMat(int[m, n] mat) {
+  int i;
+  int j;
+  i = 0;
+  while (i < m) {
+    j = 0;
+    while (j < n) {
       printInt(mat[i, j]);
       if (j + 1 < n) printSpaces(1);
+      j = j + 1;
     }
     printNewlines(1);
+    i = i + 1;
   }
 }
-
-
-void printFloatMat(float[m,n] mat) {
-   for (int i = 0, m) {
-     for (int j = 0, n) {
-       printFloat(mat[i, j]);
-       if (j + 1 < n) printSpaces(1);
-     }
-     printNewlines(1);
-   }
- }
-
- void scanIntVec(int[n] vec) {
-   for (int i = 0, n) {
-     vec[i] = scanInt();
-   }
- }
-
- void scanFloatVec(float[n] vec) {
-   for (int i = 0, n) {
-     vec[i] = scanFloat();
-   }
- }
-
- void scanIntMat(int[m, n] mat) {
-   for (int i = 0, m) {
-     for (int j = 0, n) {
-       mat[i, j] = scanInt();
-     }
-   }
- }
-
- void scanFloatMat(float[m, n] mat) {
-   for (int i = 0, m) {
-     for (int j = 0, n) {
-       mat[i, j] = scanFloat();
-     }
-   }
- }
+export void printFloatMat(float[m, n] mat) {
+  int i;
+  int j;
+  i = 0;
+  while (i < m) {
+    j = 0;
+    while (j < n) {
+      printFloat(mat[i, j]);
+      if (j + 1 < n) printSpaces(1);
+      j = j + 1;
+    }
+    printNewlines(1);
+    i = i + 1;
+  }
+}
+export void scanIntVec(int[n] vec) {
+  int i;
+  i = 0;
+  while (i < n) {
+    vec[i] = scanInt();
+    i = i + 1;
+  }
+}
+export void scanFloatVec(float[n] vec) {
+  int i;
+  i = 0;
+  while (i < n) {
+    vec[i] = scanFloat();
+    i = i + 1;
+  }
+}
+export void scanIntMat(int[m, n] mat) {
+  int i;
+  int j;
+  i = 0;
+  while (i < m) {
+    j = 0;
+    while (j < n) {
+      mat[i, j] = scanInt();
+      j = j + 1;
+    }
+    i = i + 1;
+  }
+}
 
  // Matrix multiply: c = a * b
  // Dimensions are expected to be: a[m,n], b[n,p], c[m,p].
@@ -87,47 +103,64 @@ void printFloatMat(float[m,n] mat) {
  }
 
 
- void queens(bool[m, n] a) {
-   // ensure square by simple assumption; clear board
-   for (int r = 0, m) {
-     for (int c = 0, n) a[r, c] = false;
-   }
 
-   bool safe(int row, int col) {
-     // same column & diagonals upwards (placing row by row)
-     for (int r = 0, row) {
-       if (a[r, col]) return false;
-     }
-     int r1 = row;
-     int c1 = col;
-     while (r1 > 0 && c1 > 0) {
-       r1 = r1 - 1;
-       c1 = c1 - 1;
-       if (a[r1, c1]) return false;
-     }
-     r1 = row;
-     c1 = col;
-     while (r1 > 0 && c1 + 1 < n) {
-       r1 = r1 - 1;
-       c1 = c1 + 1;
-       if (a[r1, c1]) return false;
-     }
-     return true;
-   }
+// Bonus: N‑Queens. Fills a solution into a (requires square: m==n)
+export void queens(bool[m, n] a) {
+  int i;
+  int j;
+  int N;
+  bool isSafe(int row, int col) {
+    int r;
+    int c;
+    r = 0;
+    while (r < row) {
+      if (a[r, col]) return false;
+      r = r + 1;
+    }
+    r = row - 1;
+    c = col - 1;
+    while (r >= 0 && c >= 0) {
+      if (a[r, c]) return false;
+      r = r - 1;
+      c = c - 1;
+    }
+    r = row - 1;
+    c = col + 1;
+    while (r >= 0 && c < N) {
+      if (a[r, c]) return false;
+      r = r - 1;
+      c = c + 1;
+    }
+    return true;
+  }
 
-
-   bool solve(int row) {
-     if (row == m) return true;
-     for (int col = 0, n) {
-       if (safe(row, col)) {
-         a[row, col] = true;
-         if (solve(row + 1)) return true;
-         a[row, col] = false;
-       }
-     }
-     return false;
-   }
-
-
-   solve(0);
- }
+  bool place(int row) {
+    int col;
+    bool ok;
+    if (row == N) return true;
+    col = 0;
+    ok = false;
+    while (col < N && !ok) {
+      if (isSafe(row, col)) {
+        a[row, col] = true;
+        ok = place(row + 1);
+        if (!ok) a[row, col] = false;
+      }
+      col = col + 1;
+    }
+    return ok;
+  }
+  // clear board
+  i = 0;
+  while (i < m) {
+    j = 0;
+    while (j < n) {
+      a[i, j] = false;
+      j = j + 1;
+    }
+    i = i + 1;
+  }
+  if (m != n) return;
+  N = m;
+  place(0);
+}
