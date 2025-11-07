@@ -1,0 +1,203 @@
+start phase RootPhase {
+    info = "Denotes the entry point of your compiler",
+
+    actions {
+        pass SPdoScanParse;  // existing scan+parse
+        Demo;                // keep your existing demo phase
+        Optimisations;       // all optimisation passes/traversals
+        CountOperators;      // count arithmetic operators
+        print;               // pretty-print / final output
+    }
+};
+
+// A simple print traversal (existing)
+traversal Print {
+    uid = PRT
+};
+
+/* -----------------------------
+ *  Optimisations (top-level)
+ * -----------------------------
+ * We expose traversals/passes at top-level so they can be reused by phases.
+ */
+
+// The demo subtraction optimisation traversal
+traversal OptSubstraction {
+    uid = OS,
+    nodes = { Binop }
+};
+
+// Strength Reduction traversal (2*k or k*2 -> k+k)
+traversal StrengthReduction {
+    uid = SR,
+    nodes = { Binop }
+};
+
+// Super Strength Reduction traversal (n*k or k*n -> k+k+...+k for n up to max_factor)
+traversal SuperStrengthReduction {
+    uid = SSR,
+    nodes = { Binop },
+    travdata {
+        int max_factor
+    }
+};
+
+// Count Operators traversal - counts arithmetic operators and stores in root
+traversal CountOperators {
+    uid = CO,
+    nodes = { Binop, CompilationUnit },
+    travdata {
+        int add_count,
+        int sub_count,
+        int mul_count,
+        int div_count,
+        int mod_count
+    }
+};
+
+/* -----------------------------
+ *  Phases
+ * -----------------------------
+ */
+
+// Your existing Demo phase
+phase Demo {
+    actions {
+        traversal RenameIdentifiers {
+            uid = RI,
+            nodes = { Var, VarLet }
+        };
+
+        traversal SumInts {
+            uid = SI,
+            nodes = { Stmts, Num },
+            travdata {
+                int sum
+            }
+        };
+    }
+};
+
+// Phase that groups all optimisations
+phase Optimisations {
+    actions {
+        OptSubstraction;  // demo optimisation
+        phase StrengthReductionPhase {
+            gate = GLBstrengthReductionDisabled,
+            actions {
+                StrengthReduction;  // basic strength-reduction (factor=2)
+            }
+        };
+        SuperStrengthReduction;  // super strength-reduction (factor=2..max)
+    }
+};
+
+/*** ---------------------------
+ *           AST
+ *  ---------------------------
+ */
+
+enum MonOpType {
+    prefix = MO,
+    values {
+        not, neg
+    }
+};
+
+enum BinOpType {
+    prefix = BO,
+    values {
+        add, sub, mul, div, mod, lt, le, gt, ge, eq, ne,
+        and, or
+    }
+};
+
+nodeset Expr = { Num, Float, Bool, Binop, Var };
+nodeset Stmt = { Assign };
+
+// Nodes you want to be able to link to from your symbol table.
+nodeset Link = Expr | Stmt;
+
+root node CompilationUnit {
+    children {
+        Stmts stmts { constructor, mandatory }
+    },
+    
+    attributes {
+        int add_count,
+        int sub_count,
+        int mul_count,
+        int div_count,
+        int mod_count
+    }
+};
+
+node Program {
+    children {
+        Stmts stmts { constructor, mandatory }
+    }
+};
+
+node Stmts {
+    children {
+        Stmt stmt { constructor, mandatory },
+        Stmts next { constructor }
+    }
+};
+
+node Assign {
+    children {
+        VarLet let { constructor },
+        Expr expr { constructor, mandatory }
+    }
+};
+
+node Binop {
+    children {
+        Expr left { constructor, mandatory },
+        Expr right { constructor, mandatory }
+    },
+
+    attributes {
+        BinOpType op { constructor }
+    }
+};
+
+nodeset Vars {
+    nodes = { VarLet, Var },
+
+    attributes {
+        string name,
+        Link decl
+    }
+};
+
+node VarLet {
+    attributes {
+        string name { constructor }  // Repeat from nodeset to add constructor
+    }
+};
+
+node Var {
+    attributes {
+        string name { constructor }
+    }
+};
+
+node Num {
+    attributes {
+        int val { constructor }
+    }
+};
+
+node Float {
+    attributes {
+        float val { constructor }
+    }
+};
+
+node Bool {
+    attributes {
+        bool val { constructor }
+    }
+};
