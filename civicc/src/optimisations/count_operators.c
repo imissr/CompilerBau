@@ -1,13 +1,4 @@
-/**
- * @file
- *
- * This file contains the code for the CountOperators traversal.
- * The traversal has the uid: CO
- *
- * Counts occurrences of the five arithmetic operators (add, sub, mul, div, mod)
- * and stores the results in the root node attributes.
- *
- */
+
 
 #include "ccn/ccn.h"
 #include "ccngen/ast.h"
@@ -33,7 +24,6 @@ void COinit()
  */
 void COfini()
 {
-    // Nothing to clean up
 }
 
 /**
@@ -63,7 +53,6 @@ node_st *CObinop(node_st *node)
         data->mod_count++;
         break;
     default:
-        // Not an arithmetic operator, don't count
         break;
     }
 
@@ -74,17 +63,14 @@ node_st *CObinop(node_st *node)
 }
 
 /**
- * @fn COcompilationunit
  * Store the collected counts in the root node attributes
  */
 node_st *COcompilationunit(node_st *node)
 {
     struct data_co *data = DATA_CO_GET();
 
-    // First traverse children to count operators
     TRAVchildren(node);
 
-    // Then store the counts in the root node
     COMPILATIONUNIT_ADD_COUNT(node) = data->add_count;
     COMPILATIONUNIT_SUB_COUNT(node) = data->sub_count;
     COMPILATIONUNIT_MUL_COUNT(node) = data->mul_count;

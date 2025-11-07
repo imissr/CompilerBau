@@ -17,7 +17,6 @@
  */
 node_st *PRTcompilationunit(node_st *node)
 {
-  // Print operator statistics if available (non-zero means they were counted)
   if (COMPILATIONUNIT_ADD_COUNT(node) != 0 ||
       COMPILATIONUNIT_SUB_COUNT(node) != 0 ||
       COMPILATIONUNIT_MUL_COUNT(node) != 0 ||

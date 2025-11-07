@@ -13,12 +13,11 @@ void GLBinitializeGlobals()
     global.line = 0;
     global.input_file = NULL;
     global.output_file = NULL;
-    global.max_strength_reduction_factor = 0; // 0 means disabled
+    global.max_strength_reduction_factor = 0;
 }
 
 /**
  * Gate function: returns true if basic strength reduction should run
- * (i.e., when super strength reduction is NOT enabled)
  */
 bool GLBstrengthReductionDisabled()
 {
