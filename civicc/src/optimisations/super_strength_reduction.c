@@ -1,14 +1,4 @@
-/**
- * @file
- *
- * This file contains the code for the SuperStrengthReduction traversal.
- * The traversal has the uid: SSR
- *
- * Implements super strength reduction optimization:
- * - n * k -> k + k + ... + k (n times) for any n from 2 to max_factor
- * - k * n -> k + k + ... + k (n times) for any n from 2 to max_factor
- *
- */
+
 
 #include "ccn/ccn.h"
 #include "ccngen/ast.h"
@@ -31,7 +21,7 @@ void SSRinit()
  */
 void SSRfini()
 {
-    // Nothing to clean up
+   
 }
 
 /**
@@ -46,7 +36,7 @@ node_st *SSRbinop(node_st *node)
     struct data_ssr *data = DATA_SSR_GET();
     if (data->max_factor <= 0)
     {
-        return node; // Skip if not enabled
+        return node; 
     }
 
     // Check if this is a multiplication operation
@@ -74,8 +64,6 @@ node_st *SSRbinop(node_st *node)
         if (factor >= 2 && factor <= data->max_factor && expr != NULL)
         {
             // Create: expr + expr + ... + expr (factor times)
-            // We build this as: ((...((expr + expr) + expr) + ...) + expr)
-
             node_st *result = CCNcopy(expr);
 
             for (int i = 1; i < factor; i++)
@@ -86,6 +74,7 @@ node_st *SSRbinop(node_st *node)
 
             // Free the old multiplication node
             CCNfree(node);
+            
             node = result;
         }
     }
