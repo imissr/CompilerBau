@@ -38,6 +38,7 @@ add_executable(civicc ${FLEX_CivicLexer_OUTPUTS} ${BISON_CivicParser_OUTPUTS}
     # Optimisations directory
     src/optimisations/opt_sub.c src/optimisations/strength_reduction.c
     src/optimisations/super_strength_reduction.c src/optimisations/count_operators.c
+    src/optimisations/count_identifiers.c
 )
 
 target_compile_options(civicc PRIVATE

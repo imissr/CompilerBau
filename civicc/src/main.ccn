@@ -6,6 +6,7 @@ start phase RootPhase {
         Demo;                // keep your existing demo phase
         Optimisations;       // all optimisation passes/traversals
         CountOperators;      // count arithmetic operators
+        CountIdentifiers;    // count identifier occurrences
         print;               // pretty-print / final output
     }
 };
@@ -52,6 +53,15 @@ traversal CountOperators {
         int mul_count,
         int div_count,
         int mod_count
+    }
+};
+
+// Count Identifiers traversal - counts occurrences of identifiers using hash table
+traversal CountIdentifiers {
+    uid = CI,
+    nodes = { Var, VarLet, CompilationUnit },
+    travdata {
+        user htable_stptr table
     }
 };
 
@@ -107,54 +117,248 @@ enum MonOpType {
 enum BinOpType {
     prefix = BO,
     values {
-        add, sub, mul, div, mod, lt, le, gt, ge, eq, ne,
-        and, or
+        add, sub, mul, div, mod,    // arithmetic
+        lt, le, gt, ge,             // relational
+        eq, ne,                     // equality
+        and, or                     // logical
     }
 };
 
-nodeset Expr = { Num, Float, Bool, Binop, Var };
-nodeset Stmt = { Assign };
+enum TypeKind {
+    prefix = TY,
+    values {
+        t_void, t_bool, t_int, t_float
+    }
+};
+
+// Expression, statement and declaration categories
+nodeset Expr  = { Num, Float, Bool, Binop, Monop, Cast, Call, Var, ArrayAccess, ArrayInit };
+nodeset Stmt  = { VarDec, Assign, ExprStmt, If, While, DoWhile, For, Return, Block };
+nodeset Decl  = { FunDecl, FunDef, GlobalVarDecl, GlobalVarDef };
 
 // Nodes you want to be able to link to from your symbol table.
 nodeset Link = Expr | Stmt;
 
+// Root of the AST: a compilation unit consists of a list of declarations
 root node CompilationUnit {
     children {
-        Stmts stmts { constructor, mandatory }
+        Decls decls { constructor }   // may be empty
     },
-    
-    attributes {
-        int add_count,
-        int sub_count,
-        int mul_count,
-        int div_count,
-        int mod_count
+attributes {
+    int add_count,
+    int sub_count,
+    int mul_count,
+    int div_count,
+    int mod_count
+}
+
+};
+
+// List of declarations: one-or-more (linked list style)
+node Decls {
+    children {
+        Decl  decl { constructor, mandatory },
+        Decls next { constructor }
     }
 };
 
-node Program {
+/* -----------------------------
+ *  Types
+ * -----------------------------
+ */
+
+node Type {
     children {
-        Stmts stmts { constructor, mandatory }
+        Exprs dims { constructor }       // optional list of dimension sizes (for arrays)
+    }
+
+    attributes {
+        TypeKind kind { constructor },   // void, bool, int, float
+        bool     isArray                 // true iff this is an array type
     }
 };
+/* -----------------------------
+ *  Top-level declarations
+ * -----------------------------
+ */
+
+// FunDec ⇒ extern FunHeader ;
+node FunDecl {
+    children {
+        Type   retType { constructor, mandatory },
+        Params params  { constructor }
+    },
+
+    attributes {
+        string name { constructor }
+    }
+};
+
+// FunDef ⇒ [ export ] FunHeader { FunBody }
+node FunDef {
+    children {
+        Type   retType { constructor, mandatory },
+        Params params  { constructor },
+        FunBody body   { constructor, mandatory }
+    },
+
+    attributes {
+        string name    { constructor },
+        bool   isExport
+    }
+};
+
+// GlobalDec ⇒ extern Type Id ;
+node GlobalVarDecl {
+    children {
+        Type type { constructor, mandatory }
+    },
+
+    attributes {
+        string name { constructor }
+    }
+};
+
+// GlobalDef ⇒ [ export ] Type Id [ = Expr ] ;
+// plus the array versions from the extensions
+node GlobalVarDef {
+    children {
+        Type type { constructor, mandatory },
+        Expr init { constructor }        // optional, also used for ArrExpr
+    },
+
+    attributes {
+        string name    { constructor },
+        bool   isExport
+    }
+};
+
+/* -----------------------------
+ *  Function bodies & parameters
+ * -----------------------------
+ */
+
+node FunBody {
+    // FunBody ⇒ [ VarDec ]* [ Statement ]*
+    // Here we model it as a single Block that contains VarDec + other Stmt nodes
+    children {
+        Block block { constructor, mandatory }
+    }
+};
+
+node Param {
+    // Param ⇒ Type Id  (arrays via Type.isArray / Type.dims)
+    children {
+        Type type { constructor, mandatory }
+    },
+
+    attributes {
+        string name { constructor }
+    }
+};
+
+node Params {
+    children {
+        Param  param { constructor, mandatory },
+        Params next  { constructor }
+    }
+};
+
+/* -----------------------------
+ *  Statements & Blocks
+ * -----------------------------
+ */
 
 node Stmts {
     children {
-        Stmt stmt { constructor, mandatory },
+        Stmt  stmt { constructor, mandatory },
         Stmts next { constructor }
     }
 };
 
+// VarDec ⇒ Type [ [ Expr [ , Expr ]* ] ] Id [ = ArrExpr ] ;
+node VarDec {
+    children {
+        Type  type { constructor, mandatory },
+        VarLet var  { constructor, mandatory },
+        Expr  init  { constructor }      // optional, also used for ArrExpr
+    }
+};
+
+// Statement ⇒ Id = Expr ;  | Id [ ... ] = Expr ;
 node Assign {
     children {
-        VarLet let { constructor },
+        Expr lhs  { constructor, mandatory },   // Var or ArrayAccess
+        Expr rhs  { constructor, mandatory }
+    }
+};
+
+// Generic "expression statement", used e.g. for function calls: Id ( ... ) ;
+node ExprStmt {
+    children {
         Expr expr { constructor, mandatory }
     }
 };
 
+node If {
+    // if ( Expr ) Block [ else Block ]
+    children {
+        Expr  cond      { constructor, mandatory },
+        Block thenBlock { constructor, mandatory },
+        Block elseBlock { constructor }       // optional
+    }
+};
+
+node While {
+    // while ( Expr ) Block
+    children {
+        Expr  cond { constructor, mandatory },
+        Block body { constructor, mandatory }
+    }
+};
+
+node DoWhile {
+    // do Block while ( Expr ) ;
+    children {
+        Block body { constructor, mandatory },
+        Expr  cond { constructor, mandatory }
+    }
+};
+
+// for ( int Id = Expr , Expr [ , Expr ] ) Block
+node For {
+    children {
+        VarLet loopVar  { constructor, mandatory },  // the "int Id"
+        Expr   initExpr { constructor, mandatory },  // initial value
+        Expr   condExpr { constructor, mandatory },  // loop condition
+        Expr   stepExpr { constructor },             // optional step
+        Block  body     { constructor, mandatory }
+    }
+};
+
+node Return {
+    // return [ Expr ] ;
+    children {
+        Expr expr { constructor }      // optional
+    }
+};
+
+node Block {
+    // Block ⇒ { [ Statement ]* } | Statement
+    children {
+        Stmts stmts { constructor }    // may be empty
+    }
+};
+
+/* -----------------------------
+ *  Expressions
+ * -----------------------------
+ */
+
+// Binary operator expression: Expr BinOp Expr
 node Binop {
     children {
-        Expr left { constructor, mandatory },
+        Expr left  { constructor, mandatory },
         Expr right { constructor, mandatory }
     },
 
@@ -163,39 +367,109 @@ node Binop {
     }
 };
 
+// Unary operator expression: MonOp Expr
+// MonOp ⇒ - | !
+node Monop {
+    children {
+        Expr expr { constructor, mandatory }
+    },
+
+    attributes {
+        MonOpType op { constructor }
+    }
+};
+
+// Cast expression: ( BasicType ) Expr
+node Cast {
+    children {
+        Type type { constructor, mandatory },
+        Expr expr { constructor, mandatory }
+    }
+};
+
+// Function call: Id ( [ Expr [ , Expr ]* ] )
+node Call {
+
+    children {
+        Exprs arguments{ constructor }   // optional (empty argument list)
+    },
+
+    attributes {
+        string name { constructor }
+    }
+
+};
+
+// Array access: Id [ Expr [ , Expr ]* ]  (also multi-dimensional)
+node ArrayAccess {
+    children {
+        Exprs indices { constructor, mandatory }
+    }
+
+    attributes {
+        string name { constructor }
+    }
+};
+// ArrExpr ⇒ [ ArrExpr [ , ArrExpr ]* ] | Expr
+// represented as a node with a list of Expr, where each Expr may itself be an ArrayInit
+node ArrayInit {
+    children {
+        Exprs elements { constructor, mandatory }
+    }
+};
+
+// Linked-list of expressions (used for arguments, indices, array initialisers, ...)
+node Exprs {
+    children {
+        Expr  expr { constructor, mandatory },
+        Exprs next { constructor }
+    }
+};
+
+/* -----------------------------
+ *  Identifiers & literals
+ * -----------------------------
+ */
+
+// Nodes that can be shared between declarations and uses
 nodeset Vars {
     nodes = { VarLet, Var },
 
     attributes {
         string name,
-        Link decl
+        Link   decl
     }
 };
 
+// Variable "declaration name" (used in VarDec, For-headers, etc.)
 node VarLet {
     attributes {
         string name { constructor }  // Repeat from nodeset to add constructor
     }
 };
 
+// Variable use "name" (used in expressions and statements)
 node Var {
     attributes {
         string name { constructor }
     }
 };
 
+// IntConst
 node Num {
     attributes {
         int val { constructor }
     }
 };
 
+// FloatConst
 node Float {
     attributes {
         float val { constructor }
     }
 };
 
+// BoolConst
 node Bool {
     attributes {
         bool val { constructor }
