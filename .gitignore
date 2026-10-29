@@ -1,3 +1,4 @@
 .repository-backups/
 /build/
 /compiler/scripts/dist.sh
+AGENTS.md

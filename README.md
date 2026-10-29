@@ -9,6 +9,7 @@ CiviC compiler coursework using the CoCoNut framework.
 | [compiler/](compiler/) | Compiler sources, CMake configuration, demo inputs, and scripts |
 | [vendor/coconut/](vendor/coconut/) | CoCoNut generator and runtime sources |
 | [vendor/civic-exec/](vendor/civic-exec/) | CiviC assembler and virtual machine sources |
+| [vendor/civic-toolchain-linux-static/](vendor/civic-toolchain-linux-static/) | Prebuilt Linux reference compiler, assembler, and virtual machine |
 | [tests/public/](tests/public/) | Supplied compiler test suite |
 | [docs/development/coconut.md](docs/development/coconut.md) | CoCoNut development guide |
 | [docs/reference/](docs/reference/) | CiviC language and virtual machine manuals |
@@ -75,8 +76,14 @@ The resulting image is `build/compiler/ast.png`.
 
 Open the repository root in VS Code to use its shared C/C++ configuration.
 
-The optional assembler and virtual machine use Rust. Build them into `build/`
-with:
+The supplied prebuilt Linux tools are in
+[`vendor/civic-toolchain-linux-static/`](vendor/civic-toolchain-linux-static/).
+Its `civicc` is the reference compiler; your own compiler is built as
+`build/compiler/civicc`. Keep the prebuilt toolchain together so its run script
+can find the binaries and the reference compiler can find `civic.h`.
+
+Alternatively, build the assembler and virtual machine from their Rust sources
+into `build/` with:
 
 ```bash
 cargo build --release --manifest-path vendor/civic-exec/Cargo.toml --target-dir build/civic-exec
