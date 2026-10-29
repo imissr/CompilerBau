@@ -1,0 +1,137 @@
+\documentclass[
+	a4paper,
+	12pt,
+	twoside,
+	numbers=noenddot,
+	parskip=half-,
+	chapterprefix=true
+]{scrreport}
+\usepackage[
+	a4paper,
+	lmargin={2.5cm},
+	rmargin={2.5cm},
+	tmargin={2.5cm},
+	bmargin={3cm}
+]{geometry}
+%\usepackage[hmargin=2.9cm,vmargin=3.5cm]{geometry}
+%\usepackage{a4wide}
+\usepackage{tabularx}
+\usepackage{fancyvrb}
+\usepackage{fancyhdr}
+\usepackage[UKenglish]{babel}
+\usepackage{lmodern}
+\usepackage{xltabular}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+%\setlength{\parindent}{0pt}
+%\renewcommand{\familydefault}{\sfdefault}
+
+\newcommand{\civic}{CiviC}
+\newcommand{\civicvm}{CiviC-VM}
+\newcommand{\civicas}{CiviC-AS}
+\newcommand{\manversion}{1.1}
+
+%\renewcommand{\sectionmark}[1]{\markboth{section #1}}
+\RedeclareSectionCommand[%
+	beforeskip=-10pt,%
+	afterskip=1sp%
+]{subsubsection}
+
+\RedeclareSectionCommand[%
+	beforeskip=0pt,%
+	%afterskip=1sp%
+]{paragraph}
+
+\pagestyle{fancy}
+\fancyhf{}
+\setlength{\headheight}{15pt}
+\fancyhead[LE,RO]{\sffamily \thepage}
+\fancyhead[RE]{\sffamily \nouppercase{\leftmark}}
+\fancyhead[LO]{\sffamily \nouppercase{\rightmark}}
+
+\renewcommand{\headrulewidth}{0.3pt}
+\renewcommand{\footrulewidth}{0.3pt}
+
+\lfoot{\sffamily\civicvm{} and \civicas{} Reference Manual}
+\cfoot{}
+\rfoot{\sffamily v\manversion}
+
+\fancypagestyle{plain}{
+	\fancyhead[RE,LO]{}
+	\renewcommand{\headrulewidth}{0pt}
+}
+
+%\addtokomafont{title}{\sffamily}
+
+\title{ Civilized C Virtual Machine (\civicvm) and Civilized C Assembler (\civicas) Reference Manual Version \manversion}
+
+\author{Mike Lankamp \and Eric Wintzler \and Clemens Grelck}
+
+\publishers{University of Amsterdam\\Friedrich Schiller University Jena}
+
+\date{September 2026}
+
+\sloppy
+
+\begin{document}
+\thispagestyle{empty}
+
+%\maketitle
+
+\begin{center}
+\vspace*{2cm}
+{\sffamily\bfseries\LARGE Civilized C Virtual Machine (\civicvm)\\
+and\\
+Civilized C Assembler (\civicas)\\[2ex]
+Reference Manual\\[1ex]
+Version \manversion}
+
+\vspace*{2cm}
+{\sffamily\bfseries\Large Mike Lankamp\qquad Eric Wintzler \quad Clemens Grelck}
+
+\vspace*{2cm}
+{\sffamily\bfseries\large University of Amsterdam\\
+Computer Systems Architecture\\[2ex]
+Friedrich Schiller University Jena\\
+System Software Research Group\\
+\vspace*{1cm}
+May 2026}
+
+\end{center}
+
+\newpage
+\phantom{z}
+\thispagestyle{empty}
+
+\newpage
+\tableofcontents
+\newpage
+\phantom{z}
+\thispagestyle{empty}
+
+\cleardoublepage
+
+\chapter{Instruction Set Architecture}
+\label{part:isa}
+\input{isa}
+
+\cleardoublepage
+\chapter{Tool Chain}
+\label{part:toolchain}
+
+The tool chain consists of an assembler and a virtual machine. The assembler is a simple compiler, that transforms the instructions described in the previous chapter and the pseudo instructions described in this chapter into a well-defined binary format. The virtual machine reads one or more files containing such bytecode and executes the encoded program.
+
+\input{assembler}
+
+\input{vm}
+
+\cleardoublepage
+\appendix
+%\chapter{Appendix}
+\input{opcodes}
+\cleardoublepage
+\input{asm_example}
+
+\end{document}

@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "name": "CoCoNut-Linux",
+            "includePath": [
+                "${workspaceFolder}/compiler/src",
+                "${workspaceFolder}/vendor/coconut/copra",
+                "${workspaceFolder}/vendor/coconut/palm/include",
+                "${workspaceFolder}/build/compiler/ccngen",
+                "${workspaceFolder}/build/compiler/coconut-compat"
+            ],
+            "defines": [
+                "CCN_USES_UNSAFE=1"
+            ],
+            "compilerPath": "/bin/gcc",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
+}

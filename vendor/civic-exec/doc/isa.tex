@@ -1,0 +1,435 @@
+%\section{Introduction}
+
+This part of the documents describes the Instruction Set Architecture that \civic{} programs will be run in. It comprises the conceptual execution model and environment and a specification of all instructions.
+
+\section{Execution Environment}
+
+This section describes the execution environment of the virtual machine as seen by assembly-language programmers. It describes how the \civicvm{} executes instructions and how it stores and manipulates data. The parts of the execution environment described here include the stack and registers.
+
+\subsection{Overview}
+
+Any program running on the \civicvm{} is given a set of resources for executing programs and for storing data. These resources make up the execution environment of the \civicvm{}. More precisely, it consists of three disjoint memories and three registers:
+
+\begin{itemize}
+    \item \textbf{Instruction memory.} The instruction memory is a read-only memory that contains the code of a program after being loaded into the \civicvm{}.
+    
+    \item \textbf{Stack memory.} The stack is a contiguous array of values. Conceptually, the stack can be infinitely long. Most instructions operate on the top elements of the stack, removing them from the top of the stack and pushing some result back onto the stack. The top of the stack is identified by the stack pointer register.
+    
+    \item \textbf{Heap memory.} The heap memory is a random access memory; it is mainly used to store arrays.
+    
+    \item \textbf{Instruction Pointer (IP) register.} This register contains the address of the currently executing instruction. The IP register is composed of two parts, a module identifier and an offset into that module's instruction stream. Branches, jumps and subroutine calls modify the offset part of the IP register; jumps to external subroutines modify the entire register.
+    
+    \item \textbf{Stack Pointer (SP) register.} The stack pointer register points to the top of the stack, more precisely it points to the next available entry in stack memory.
+    
+    \item \textbf{Frame Pointer (FP) register.} The frame pointer register points to the beginning of the currently executing function's current frame and this permits access to the function's parameters and local variables.
+\end{itemize}
+
+Note that all three registers cannot be directly read or written by programs but are manipulated by certain instructions. For example, instructions that push or pop values onto or from the stack, respectively, implicitly manipulate the stack pointer register; all instructions manipulate the instruction pointer register by either advancing it to the next instruction or by adding a certain offset to it in the case of jump and branch instructions. Last not least, instructions implementing the procedure call convention implicitly manipulate the frame pointer register.
+
+\subsection{Modules}
+
+A program consists of one or more modules. Each module consists of a
+
+\begin{itemize}
+    \item \textbf{Sequence of instructions.} The instructions in a module are a byte stream of variable-length instructions; they are packed one after the other to form a single array of instruction bytes. Each instruction has either zero, one or two arguments of varying numbers of bytes.
+    
+    \item \textbf{Global variable table.} The global variable table is an array of values that is created, but left uninitialised, when the module is loaded. Certain instructions can move values between this table and the stack.
+    
+    \item \textbf{Constant table.} The constant table is an array of values that is created and initialised when the module is loaded. Certain instructions can move values from this table onto the stack.
+    
+    \item \textbf{Function import table.} The function import table is a list of functions that must be located in different modules. These imported functions will be connected with exported functions in other modules. Certain instructions can perform a subroutine jump to an import entry. Executing such an instruction will result in a subroutine call into a different module. If an import entry could not be found among other modules when the module is loaded, execution of the program is aborted.
+    
+    \item \textbf{Function export table.} The function export table is a list of functions in the current module that should be made available to other modules for importing.
+    
+    \item \textbf{Variable import table.} The variable import table is a list of variables that must be located in different modules. Like imported functions, imported variables will be connected with exported variables in other modules. Imported variables can be loaded and manipulated using specialised instructions which operate on the global variable table of another module. If an import entry could not be found among other modules when the module is loaded, execution of the program is aborted.
+    
+    \item \textbf{Variable export table.} The variable export table is a list of variables in the current module that should be made available to other modules for importing.
+\end{itemize}
+
+\subsection{Operands}
+
+Instructions have zero, one or two operands. We distinguish a number of differently typed operands for a number of different purposes:
+
+\begin{itemize}
+    \item a 1-byte unsigned number;
+    \item a 1-byte unsigned index into the current frame;
+    \item a 2-byte unsigned index into the constant table;
+    \item a 2-byte unsigned index into the global table;
+    \item a 2-byte unsigned index into an import table;
+    \item a 2-byte signed offset on the instruction pointer.
+\end{itemize}
+
+The number and type of operands is unambiguously determined by the instruction itself. Note that in contrast to register transfer instruction set architectures (both hardware and virtual), the runtime stack implicitly provides the data that certain instructions operate on.
+
+
+\section{Data Types}
+The \civicvm{} supports four different types:
+
+\begin{itemize}
+    \item\textbf{Integers.} Integer numbers are signed and guaranteed to be 32 bits long.
+    
+    \item\textbf{Floats.} Floating-point numbers conform to the IEEE 754 standard and are guaranteed to be 64 bit long.
+    
+    \item\textbf{Booleans.} Booleans can only have two values: \texttt{true} or \texttt{false}.
+    
+    \item\textbf{Array references.} Arrays are inherently one-dimensional; the element type is either \texttt{int}, \texttt{float} or \texttt{bool}; There is no support for nested arrays in the \civicvm{}.
+\end{itemize}
+
+For safety, all items in tables, on the stack and in arrays are typed during initialization. This type can never be changed. Instructions that deal in reading or writing these values come in different shapes, depending on the type of the data that is operated on. For instance, the \texttt{iadd} instruction adds two integer values, while the \texttt{fadd} instruction adds two floating-point values, etc.
+
+In case of a mismatch between the operand types expected by some instructions and the types of the values found on the stack, in the heap, in the constant pool or in the global frame, the \civicvm{} aborts with an appropriate error message.
+
+\section{Instruction Set Reference}
+
+This section describes the complete \civicvm{} instruction set. The instruction descriptions are grouped according to their function. Instructions consist of one primary opcode byte and, depending on the instruction, one or more 8-bit or 16-bit operands. For each instruction, the opcode is given, as well as the required operands and a description of each.
+
+\subsection{Interpreting the reference pages}
+
+This section describes the information contained in the various sections of the following instruction reference pages. It also explains the notational conventions and abbreviations used in them.
+
+\subsubsection{Opcode column}
+
+The ``Opcode'' column gives the 8-bit opcode for the instruction. The opcode is given in hexadecimal representation.
+
+\subsubsection{Instruction column}
+
+The ``Instruction'' column gives the syntax of the instruction statement as it would appear in an assembly program. The following is a list of symbols used to represent operands in the instruction statements:
+
+\begin{itemize}
+    \item \texttt{A} --- An unsigned 8-bit count of the number of arguments that a subroutine takes.
+    \item \texttt{L} --- An unsigned 8-bit offset into the current frame for access to a parameter or local variable.
+    \item \texttt{N} --- An unsigned 8-bit static link counter. Instructions take an operand of this type can refer to frames other than their own. This operand will identify how many (lexical) frames to skip past.
+    \item \texttt{C} --- An unsigned 16-bit index into the module's constant table.
+    \item \texttt{G} --- An unsigned 16-bit index into the module's global table.
+    \item \texttt{I} --- An unsigned 16-bit index into the module's import table.
+    \item \texttt{O} --- A signed 16-bit offset relative to the instruction's PC.
+\end{itemize}
+
+\subsubsection{Description column}
+
+The ``Description'' column briefly explains the various forms of the instruction. The following ``Description'' section contains more information.
+
+\subsubsection{Description}
+
+The ``Description'' section describes the purpose of the instructions and the required operands.
+
+\newenvironment{instruction}[2] {
+    %\begin{minipage}{\linewidth}
+    %    \setlength{\parskip}{0.5\baselineskip}
+        \subsubsection{#1}
+        %\vspace{.5\baselineskip}
+        \begin{tabularx}{\linewidth}{|>{\ttfamily}l >{\ttfamily}l >{\ttfamily}l >{\ttfamily}l X|}\hline
+            {\normalfont\bfseries Opcode} & \multicolumn{3}{l}{{\bfseries Instruction}} & {\bfseries Description} \\
+            \hline
+            #2
+            \hline
+        \end{tabularx}
+        \subsubsection*{Description}
+}{
+    %\end{minipage}
+    \par%\vspace{.5\baselineskip}\par
+    \par
+}
+
+\subsection{Arithmetic instructions}
+
+\begin{instruction}{Addition}{
+00 & iadd & & & Add two integer numbers \\
+20 & fadd & & & Add two floating-point numbers \\
+}
+Pops two values from the top of the stack, adds them and pushes the result onto the stack. \texttt{iadd} pops and pushes integer values. \texttt{fadd} pops and pushes floating point values.
+\end{instruction}
+
+
+\begin{instruction}{Subtraction}{
+01 & isub & & & Subtract two integer numbers \\
+21 & fsub & & & Subtract two floating-point numbers \\
+}
+Pops two values from the top of the stack, subtracts the first popped value from the second popped value and pushes the result onto the stack. \texttt{isub} pops and pushes integer values. \texttt{fsub} pops and pushes floating point values.
+\end{instruction}
+
+
+\begin{instruction}{Multiplication}{
+02 & imul & & & Multiply two integer numbers \\
+22 & fmul & & & Multiply two floating-point numbers \\
+}
+Pops two values from the top of the stack, multiplies them  and pushes the result onto the stack. \texttt{imul} pops and pushes integer values. \texttt{fmul} pops and pushes floating point values.
+\end{instruction}
+
+
+\begin{instruction}{Division}{
+03 & idiv & & & Divide two integer numbers \\
+23 & fdiv & & & Divide two floating-point numbers \\
+}
+Pops two values from the top of the stack, divides the second popped value by the first popped value and pushes the result onto the stack. \texttt{idiv} pops and pushes integer values. \texttt{fdiv} pops and pushes floating point values.
+\end{instruction}
+
+
+\begin{instruction}{Remainder}{
+04 & \texttt{irem} & & & Remainder of integer division of two integer numbers\\
+}
+Pops two values from the top of the stack, divides the second popped value by the first popped value (i.e., the values are popped right-to-left) and pushes the remainder onto the stack. \texttt{irem} pops and pushes integer values.
+\end{instruction}
+
+
+\begin{instruction}{Negation}{
+05 & ineg & & & Negate integer \\
+25 & fneg & & & Negate floating-point \\
+45 & bnot & & & Negate boolean \\
+}
+Pops a value from the top of the stack, negates it and pushes the result onto the stack. \texttt{ineg} pops and pushes integer values. \texttt{fneg} pops and pushes floating point values. \texttt{bnot} pops and pushes boolean values.
+\end{instruction}
+
+
+\begin{instruction}{Increment / Decrement}{
+60 & iinc & L & C & Increment local by constant\\
+61 & iinc\_1 & L & & Increment local by one\\
+62 & idec & L & C & Decrement local by constant\\
+63 & idec\_1 & L & & Decrement local by one\\
+}
+Increments or decrements the local variable identified by \texttt{L} with the value loaded from the constant table at index \texttt{C}. \texttt{iinc} and \texttt{idec} increment and decrement, respectively. \texttt{iinc\_1} and \texttt{idec\_1} increment and decrement by 1, and do not take the constant table index \texttt{C}. All instructions operate on integer local variables. The stack pointer is not modified.
+\end{instruction}
+
+
+\begin{instruction}{Locical conjunction and disjunction}{
+44 & badd & & & Get the logical disjunction of two boolean values \\
+4E & bmul & & & Get the logical conjunction of two boolean values \\
+}
+Pops two values from the top of the stack, calculates disjunction or conjunction and pushes the result onto the stack. \texttt{badd} calculates disjunction, \texttt{bmul} calculates conjunction.
+\end{instruction}
+
+\subsection{Comparison instructions}
+
+
+\begin{instruction}{Relational Operations}{
+08 & ine & & & Test if not equal \\
+09 & ieq & & & Test if equal \\
+0A & ilt & & & Test if less \\
+0B & ile & & & Test if less or equal \\
+0C & igt & & & Test if greater \\
+0D & ige & & & Test if greater or equal \\
+28 & fne & & & Test if not equal \\
+29 & feq & & & Test if equal \\
+2A & flt & & & Test if less \\
+2B & fle & & & Test if less or equal \\
+2C & fgt & & & Test if greater \\
+2D & fge & & & Test if greater or equal \\
+48 & bne & & & Test if not equal \\
+49 & beq & & & Test if equal \\
+}
+These instructions pop two values off the top of the stack, compare them, and push the boolean result onto the stack. The \texttt{i??} instructions pop two integer values, the \texttt{f??} instructions pop two floating-point values and the \texttt{b??} instructions pop two boolean values. The values are popped right-to-left (i.e., the first popped value is on the right side of the comparison). 
+\end{instruction}
+
+\subsection{Control flow instructions}
+
+\begin{instruction}{Initiate Subroutine call}{
+68 & isr  &   & & Initiate call to subroutine in current scope\\
+69 & isrn & N & & Initiate call to subroutine in outer scope\\
+6A & isrl &   & & Initiate call to subroutine local to current scope\\
+6B & isrg &   & & Initiate call to global subroutine\\
+}
+These instructions push an activation record onto the stack which will be finalized by the \texttt{jsr} or \texttt{jsre} instructions. \texttt{isr} pushes an activation record for a call to a subroutine which is at the same nesting level as the currently executing subroutine. {\ttfamily isrn} pushes an activation record for a call to a subroutine which is at a higher nesting level than the currently executing subroutine. \texttt{N} specifies the number of nesting levels that the target subroutine is higher at. \texttt{N} must be greater than 0 and less than the nesting depth of the currently executing subroutine. \texttt{isrl} pushes an activation record for a call to a subroutine which is nested level directly below the currently executing subroutine (i.e., the nesting depth difference is exactly 1). \texttt{isrg} pushes an activation record for a call to a subroutine which is at the global level (i.e., a call to a subroutine which is not nested).
+
+Each of these instructions must be paired with a \texttt{jsr} or \texttt{jsre} instruction. The number of values pushed onto the stack in between this instruction and the \texttt{jsr} or \texttt{jsre} must be exactly equal to the amount of arguments that the target subroutine expects.
+\end{instruction}
+
+
+\begin{instruction}{Jump to Subroutine}{
+6D & jsr  & A & O & Jump to subroutine\\
+6E & jsre & I &   & Jump to external subroutine\\
+}
+Writes the program counter of the next instruction into the activation record pushed onto the stack by the preceding \texttt{isr}, \texttt{isrn}, \texttt{isrg} or \texttt{isrl} instruction. The activation record must be directly preceding the arguments on the stack. The number of arguments on the stack is taken from \texttt{A} in the \texttt{jsr} instruction, or from the import entry in case of a \texttt{jsre} instruction.
+
+\texttt{jsr} calls a subroutine in the same module; the location of this subroutine is \texttt{pc + O}, where \texttt{pc} is the program counter before executing the instruction and \texttt{O} is the signed integer offset taken from the instruction.
+
+\texttt{jsre} calls a subroutine in another (or possibly the same) module. The location of the subroutine is an entry in the import table, at index \texttt{I}. Upon loading the various modules, the virtual machine will resolve all imports such that \texttt{jsre} will work.
+\end{instruction}
+
+\begin{instruction}{Enter Subroutine}{
+6C & esr & L & & Enter subroutine \\
+}
+Advances the top of the stack with \texttt{L} elements, thus reserving space for \texttt{L} local variables.
+
+\texttt{esr} should be issued at the beginning of a subroutine, thus ensuring that the locals and arguments are contiguous in the stack, i.e., the first argument is addressable as local 0, and so on.
+\end{instruction}\clearpage
+
+\begin{instruction}{Return from Subroutine}{
+0F & ireturn & & & Return integer number from subroutine\\
+2F & freturn & & & Return floating-point number from subroutine\\
+4F & breturn & & & Return boolean value from subroutine\\
+6F & return  & & & Return from subroutine without function value\\
+}
+Restores the stack top to the current subroutine's activation record, set the current program counter to the return address in the activation record and pops the activation record. \texttt{ireturn}, \texttt{freturn} and \texttt{breturn} additionally pop an integer, floating-point or boolean value off the top of the stack at the beginning, and push that value onto the stack at the end.
+\end{instruction}
+
+\begin{instruction}{Jumps and Branches}{
+64 & jump      & O  & & Jump by offset \\
+65 & branch\_t & O  & & Branch by offset if true \\
+66 & branch\_f & O  & & Branch by offset if false \\
+}
+These instructions either (unconditionally) jump or conditionally branch to \texttt{pc + O}, where \texttt{pc} is the current value of the instruction pointer register (i.e., the old program counter, before executing the instruction), and \texttt{O} is the signed integer offset in the instruction.
+
+\texttt{jump} jumps to \texttt{pc + O}, i.e. it resets the instruction pointer register to \texttt{pc + O} \texttt{branch\_t} and \texttt{branch\_f} pop a boolean value from the top of the stack and branch if and only if that value is \texttt{true} or \texttt{false}, respectively. Otherwise, they continue with the next instruction in sequence.
+\end{instruction}\clearpage
+
+\subsection{Variables and Constants}
+
+\begin{instruction}{Load Local Variable}{
+18 & iload    & L & & Load local integer\\
+10 & iload\_0 &   & & Load local integer \#0\\
+11 & iload\_1 &   & & Load local integer \#1\\
+12 & iload\_2 &   & & Load local integer \#2\\
+13 & iload\_3 &   & & Load local integer \#3\\
+38 & fload    & L & & Load local floating-point\\
+30 & fload\_0 &   & & Load local floating-point \#0\\
+31 & fload\_1 &   & & Load local floating-point \#1\\
+32 & fload\_2 &   & & Load local floating-point \#2\\
+33 & fload\_3 &   & & Load local floating-point \#3\\
+58 & bload    & L & & Load local boolean\\
+50 & bload\_0 &   & & Load local boolean \#0\\
+51 & bload\_1 &   & & Load local boolean \#1\\
+52 & bload\_2 &   & & Load local boolean \#2\\
+53 & bload\_3 &   & & Load local boolean \#3\\
+78 & aload    & L & & Load local array reference\\
+70 & aload\_0 &   & & Load local array reference \#0\\
+71 & aload\_1 &   & & Load local array reference \#1\\
+72 & aload\_2 &   & & Load local array reference \#2\\
+73 & aload\_3 &   & & Load local array reference \#3\\
+}
+Reads a local variable and pushes its value onto the stack. \texttt{iload}, \texttt{fload}, \texttt{bload} and \texttt{aload} load a local integer, floating-point, boolean or array reference variable at index \texttt{L}, respectively. \texttt{L} indexes the current frame in such a manner that the first argument to the current subroutine is 0, and so on. Additional local space can be allocated behind the arguments with the \texttt{esr} instruction at the beginning of the subroutine.
+
+The other instructions are shorthand notation. The number in their name indicates the value of \texttt{L} that they load.
+\end{instruction}
+
+\begin{instruction}{Load Relatively Free Variable}{
+19 & iloadn & N & L & Load local integer from higher frame\\
+39 & floadn & N & L & Load local floating-point from higher frame\\
+59 & bloadn & N & L & Load local boolean from higher frame\\
+79 & aloadn & N & L & Load local array reference from outer frame\\
+}
+Reads a local variable from a higher frame and pushes its value onto the stack. \texttt{iloadn}, \texttt{floadn}, \texttt{bloadn} and \texttt{aloadn} load a local integer, floating-point, boolean or array reference variable at index \texttt{L} in the frame that is \texttt{N} levels higher, respectively. Therefore, \texttt{N} must be greater than 0 and less than the nesting depth of the currently executing subroutine.
+\end{instruction}
+
+\begin{instruction}{Load Global Variable}{
+1A & iloadg & G & & Load integer from global table\\
+3A & floadg & G & & Load floating-point from global table\\
+5A & bloadg & G & & Load boolean from global table\\
+7A & aloadg & G & & Load array reference from global table\\
+}
+Loads a value from the module's global table at index \texttt{G} and pushes it onto the stack. \texttt{iloadg}, \texttt{floadg}, \texttt{bloadg} and \texttt{aloadg} load and push an integer, floating-point, boolean and array reference, respectively. For this, \texttt{G} must be a valid index into the module's global table.
+\end{instruction}
+
+\begin{instruction}{Load Imported Variable}{
+40 & iloade & I & & Load integer from import table\\
+41 & floade & I & & Load floating-point from import table\\
+42 & bloade & I & & Load boolean from import table\\
+43 & aloade & I & & Load array reference from import table\\
+}
+Loads a value from the module's variable import table at index \texttt{I} and pushes it onto the stack. \texttt{iloade}, \texttt{floade}, \texttt{bloade} and \texttt{aloade} load and push an integer, floating-point, boolean and array reference, respectively. For this, \texttt{I} must be a valid index into the module's variable import table.
+\end{instruction}
+
+\begin{instruction}{Load Constant}{
+17 & iloadc     & C &  & Load integer constant from constant table\\
+37 & floadc     & C &  & Load floating-point constant from constant table\\
+57 & bloadc     & C &  & Load boolean constant from constant table\\
+14 & iloadc\_0  &   &  & Load 0\\
+34 & floadc\_0  &   &  & Load 0.0\\
+54 & bloadc\_t  &   &  & Load \texttt{true}\\
+15 & iloadc\_1  &   &  & Load 1\\
+35 & floadc\_1  &   &  & Load 1.0\\
+55 & bloadc\_f  &   &  & Load \texttt{false}\\
+16 & iloadc\_m1 &   &  & Load -1\\
+}
+Push a constant value onto the stack. \texttt{iloadc}, \texttt{floadc} and \texttt{bloadc} load the constant value from the constant table, at index \texttt{C}. The other instructions push the following values as indicated in their description.
+\end{instruction}
+
+
+\begin{instruction}{Store Local Variable}{
+1C & istore & L & & Store local integer number\\
+3C & fstore & L & & Store local floating-point number\\
+5C & bstore & L & & Store local boolean value\\
+7C & astore & L & & Store local array reference\\
+}
+Pops a value from the stack and stores it into a local variable. \texttt{istore}, \texttt{fstore}, \texttt{bstore} and \texttt{astore} store an integer, floating-point, boolean or array reference into the local variable at index \texttt{L}, respectively. \texttt{L} indexes the current frame in such a manner that the first argument to the current subroutine is 0, and so on. Additional local space can be allocated behind the arguments with the \texttt{esr} instruction at the beginning of the subroutine.
+\end{instruction}
+
+
+\begin{instruction}{Store Relatively Free Variable}{
+1D & istoren & N & L & Store local integer in higher frame\\
+3D & fstoren & N & L & Store local floating-point in higher frame\\
+5D & bstoren & N & L & Store local boolean in higher frame\\
+}
+Pops a value from the stack and stores it into a local variable. \texttt{istoren}, \texttt{fstoren} and \texttt{bstoren} store an integer, floating-point, boolean or array reference into the local variable at index \texttt{L} in the frame that is \texttt{N} levels higher, respectively. Therefore, \texttt{N} must be greater than 0 and less than the nesting depth of the currently executing subroutine.
+\end{instruction}
+
+
+\begin{instruction}{Store Global Variable}{
+1E & istoreg & G & & Store integer in global table\\
+3E & fstoreg & G & & Store floating-point in global table\\
+5E & bstoreg & G & & Store boolean in global table\\
+7E & astoreg & G & & Store array reference in global table\\
+}
+Pops a value from the stack and stores it into the module's global table at index \texttt{G}. \texttt{istoreg}, \texttt{fstoreg}, \texttt{bstoreg}, \texttt{astoreg} pop and store an integer, floating-point, boolean and array reference, respectively. For this, \texttt{G} must be a valid index into the module's global table.
+\end{instruction}
+
+
+\begin{instruction}{Store Imported Variable}{
+4A & istoree & I & & Store integer in import table\\
+4B & fstoree & I & & Store floating-point in import table\\
+4C & bstoree & I & & Store boolean in import table\\
+4D & astoree & I & & Store array reference in import table\\
+}
+Pops a value from the stack and stores it into the variable at index \texttt{I} of the module's variable import table (in the global table of another module). \texttt{istoree}, \texttt{fstoree}, \texttt{bstoree}, \texttt{astoree} pop and store an integer, floating-point, boolean and array reference, respectively. \texttt{I} must be a valid index into the module's variable import table.
+\end{instruction}
+
+\subsection{Arrays}
+
+
+\begin{instruction}{Array Creation}{
+06 & inewa & & & Create new integer array\\
+26 & fnewa & & & Create new floating-point array\\
+46 & bnewa & & & Create new boolean array\\
+}
+\texttt{inewa}, \texttt{fnewa} and \texttt{bnewa} creates a new (one-dimensional) array of integer, floating-point or boolean values, respectively. These instructions pop an integer value off the top of the stack (the array size to allocate), and push a reference to the created array onto the stack.
+\end{instruction}
+
+
+\begin{instruction}{Read Element from Array}{
+1B & iloada & & & Read integer from array\\
+3B & floada & & & Read floating point from array\\
+5B & bloada & & & Read boolean from array\\
+}
+Pops an array reference off the top of the stack. Then pops an integer off the top of the stack, which is used to index the array. Then, \texttt{iloada}, \texttt{floada} and \texttt{bloada} take the  integer, floating-point or boolean value from the index array position, respectively, and push it on top of the stack.
+\end{instruction}
+
+
+\begin{instruction}{Write Element to Array}{
+1F & istorea & & & Write integer into array\\
+3F & fstorea & & & Write floating-point into array\\
+5F & bstorea & & & Write boolean into array\\
+}
+Pops an array reference off the top of the stack. Then pops an integer off the top of the stack, which is used to index the array in order of popping them off the stack. Then, \texttt{istorea}, \texttt{fstorea}, \texttt{bstorea} pop an integer, floating-point or boolean value off the top of the stack and store that in the indexed array element.
+
+The type of the array must match the type of the value popped off the stack.
+\end{instruction}
+
+
+\subsection{Type conversion instructions}
+
+\begin{instruction}{Type Conversion}{
+0E & i2f & & & Convert integer to floating-point\\
+2E & f2i & & & Convert floating-point to integer\\
+}
+\texttt{i2f} pops an integer value from the top of the stack, converts it to a floating-point value (possibly losing accuracy in the lesser-significant digits) and pushes the resulting floating-point value onto the stack. \texttt{f2i} pops a floating point value from the top of the stack, converts it to an integer value (possibly truncating or rounding the value) and pushes the resulting integer value onto the stack.
+\end{instruction}
+\clearpage
+
+\subsection{Stack maintenance instructions}
+
+\begin{instruction}{Pop}{
+07 & ipop & & & Pop integer number from top of stack\\
+27 & fpop & & & Pop floating-point number from top of stack\\
+47 & bpop & & & Pop boolean value from top of stack\\
+}
+\texttt{ipop}, \texttt{fpop} and \texttt{bpop} pop an integer number, floating-point number and boolean value off the top of the stack, respectively. The popped value is discarded. These instructions are useful whenever the returned value of some function is not bound to a variable in the calling context, i.e. despite the fact that a function does return a value (and the callee will leave that value on the runtime stack upon completion) the calling context is not interested into the function's result value, which in this case needs to be popped from the top of the runtime stack after control has returned to the caller.
+\end{instruction}

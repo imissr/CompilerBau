@@ -1,0 +1,184 @@
+\chapter{Opcode Overview}
+
+This chapter aims to give an overview of the opcodes used in the \civicvm{}. For this, it provides an opcode table to quickly look up the code for a specific instruction. Furthermore, this chapter provides a table with all instructions used for the VM along with their parameters and their opcodes.
+
+\section{Opcode Table}
+\begin{center}
+{\ttfamily
+\begin{tabular}{|l|llllllll|}
+\hline
+  & 0       & 1          & 2       & 3         & 4       & 5         & 6         & 7 \\
+\hline
+0 & iadd    & iload\_0   & fadd    & fload\_0  & iloade  & bload\_0  & iinc      & aload\_0 \\
+1 & isub    & iload\_1   & fsub    & fload\_1  & floade  & bload\_1  & iinc\_1   & aload\_1 \\
+2 & imul    & iload\_2   & fmul    & fload\_2  & bloade  & bload\_2  & idec      & aload\_2 \\
+3 & idiv    & iload\_3   & fdiv    & fload\_3  & aloade  & bload\_3  & idec\_1   & aload\_3 \\
+4 & irem    & iloadc\_0  &         & floadc\_0 & badd    & bloadc\_t & jump      & \\
+5 & ineg    & iloadc\_1  & fneg    & floadc\_1 & bnot    & bloadc\_f & branch\_t & \\
+6 & inewa   & iloadc\_m1 & fnewa   &           & bnewa   &           & branch\_f & \\
+7 & ipop    & iloadc     & fpop    & floadc    & bpop    & bloadc    &           & \\
+8 & ine     & iload      & fne     & fload     & bne     & bload     & isr       & aload  \\
+9 & ieq     & iloadn     & feq     & floadn    & beq     & bloadn    & isrn      & aloadn \\
+A & ilt     & iloadg     & flt     & floadg    & istoree & bloadg    & isrl      & aloadg \\
+B & ile     & iloada     & fle     & floada    & fstoree & bloada    & isrg      & \\
+C & igt     & istore     & fgt     & fstore    & bstoree & bstore    & esr       & astore \\
+D & ige     & istoren    & fge     & fstoren   & astoree & bstoren   & jsr       & \\
+E & i2f     & istoreg    & f2i     & fstoreg   & bmul    & bstoreg   & jsre      & astoreg \\
+F & ireturn & istorea    & freturn & fstorea   & breturn & bstorea   & return    & \\
+\hline
+\end{tabular}
+}
+\end{center}
+
+This table shows all instructions ordered by opcode. The table should be read as follows: the columns represent the high 4 bits of the opcode and the rows represent the low 4 bits of the opcode. For instance, the instruction \texttt{fneg} has an opcode of \texttt{0x25}.
+
+\pagebreak
+
+\section{Opcode Table}
+
+\begin{xltabular}{\linewidth}{|>{\ttfamily}l >{\ttfamily}l >{\ttfamily}l >{\ttfamily}l X|}\hline
+  {\normalfont\bfseries Opcode} & \multicolumn{3}{l}{{\bfseries Instruction}} & {\bfseries Description} \\\hline
+  %\endfirsthead
+  \endhead
+  \hline
+  \endfoot
+  00 & iadd & & & Add two integer numbers \\
+  01 & isub & & & Subtract two integer numbers \\
+  02 & imul & & & Multiply two integer numbers \\
+  03 & idiv & & & Divide two integer numbers \\
+  04 & irem & & & Remainder of integer division of two integer numbers\\
+  05 & ineg & & & Negate integer \\
+  06 & inewa & & & Create new integer array\\
+  07 & ipop & & & Pop integer number from top of stack\\
+  08 & ine & & & Test if not equal \\
+  09 & ieq & & & Test if equal \\
+  0A & ilt & & & Test if less \\
+  0B & ile & & & Test if less or equal \\
+  0C & igt & & & Test if greater \\
+  0D & ige & & & Test if greater or equal \\
+  0E & i2f & & & Convert integer to floating-point\\
+  0F & ireturn & & & Return integer number from subroutine\\
+  & & & &\\
+
+  10 & iload\_0 & & & Load local integer \#0\\
+  11 & iload\_1 & & & Load local integer \#1\\
+  12 & iload\_2 & & & Load local integer \#2\\
+  13 & iload\_3 & & & Load local integer \#3\\
+  14 & iloadc\_0 & & & Load 0\\
+  15 & iloadc\_1 & & & Load 1\\
+  16 & iloadc\_m1 & & & Load -1\\
+  17 & iloadc & C & & Load integer constant from constant table\\
+  18 & iload & L & & Load local integer\\
+  19 & iloadn & N & L & Load local integer from higher frame\\
+  1A & iloadg & G & & Load integer from global table\\
+  1B & iloada & & & Read integer from array\\
+  1C & istore & L & & Store local integer number\\
+  1D & istoren & N & L & Store local integer in higher frame\\
+  1E & istoreg & G & & Store integer in global table\\
+  1F & istorea & & & Write integer into array\\\pagebreak
+
+  20 & fadd & & & Add two floating-point numbers \\
+  21 & fsub & & & Subtract two floating-point numbers \\
+  22 & fmul & & & Multiply two floating-point numbers \\
+  23 & fdiv & & & Divide two floating-point numbers \\
+  24 & & & & ---\\
+  25 & fneg & & & Negate floating-point \\
+  26 & fnewa & & & Create new floating-point array\\
+  27 & fpop & & & Pop floating-point number from top of stack\\
+  28 & fne & & & Test if not equal \\
+  29 & feq & & & Test if equal \\
+  2A & flt & & & Test if less \\
+  2B & fle & & & Test if less or equal \\
+  2C & fgt & & & Test if greater \\
+  2D & fge & & & Test if greater or equal \\
+  2E & f2i & & & Convert floating-point to integer\\
+  2F & freturn & & & Return floating-point number from subroutine\\
+  & & & &\\
+
+  30 & fload\_0 & & & Load local floating-point \#0\\
+  31 & fload\_1 & & & Load local floating-point \#1\\
+  32 & fload\_2 & & & Load local floating-point \#2\\
+  33 & fload\_3 & & & Load local floating-point \#3\\
+  34 & floadc\_0 & & & Load 0.0\\
+  35 & floadc\_1 & & & Load 1.0\\
+  36 & & & & --- \\
+  37 & floadc & C & & Load floating-point constant from constant table\\
+  38 & fload & L & & Load local floating-point\\
+  39 & floadn & N & L & Load local floating-point from higher frame\\
+  3A & floadg & G & & Load floating-point from global table\\
+  3B & floada & & & Read floating point from array\\
+  3C & fstore & L & & Store local floating-point number\\
+  3D & fstoren & N & L & Store local floating-point in higher frame\\
+  3E & fstoreg & G & & Store floating-point in global table\\
+  3F & fstorea & & & Write floating-point into array\\\pagebreak
+
+  40 & iloade & I & & Load integer from import table\\
+  41 & floade & I & & Load floating-point from import table\\
+  42 & bloade & I & & Load boolean from import table\\
+  43 & aloade & I & & Load array reference from import table\\
+  44 & badd & & & Get the logical disjunction of two boolean values \\
+  45 & bnot & & & Negate boolean \\
+  46 & bnewa & & & Create new boolean array\\
+  47 & bpop & & & Pop boolean value from top of stack\\
+  48 & bne & & & Test if not equal \\
+  49 & beq & & & Test if equal \\
+  4A & istoree & I & & Store integer in import table\\
+  4B & fstoree & I & & Store floating-point in import table\\
+  4C & bstoree & I & & Store boolean in import table\\
+  4D & astoree & I & & Store array reference in import table\\
+  4E & bmul & & & Get the logical conjunction of two boolean values \\
+  4F & breturn & & &  Return boolean value from subroutine\\
+  & & & &\\
+
+  50 & bload\_0 & & & Load local boolean \#0\\
+  51 & bload\_1 & & & Load local boolean \#1\\
+  52 & bload\_2 & & & Load local boolean \#2\\
+  53 & bload\_3 & & & Load local boolean \#3\\
+  54 & bloadc\_t & & & Load {\ttfamily true}\\
+  55 & bloadc\_f & & & Load {\ttfamily false}\\
+  56 & & & & ---\\
+  57 & bloadc & C & & Load boolean constant from constant table\\
+  58 & bload & L & & Load local boolean\\
+  59 & bloadn & N & L & Load local boolean from higher frame\\
+  5A & bloadg & G & & Load boolean from global table\\
+  5B & bloada & & & Read boolean from array\\
+  5C & bstore & L & & Store local boolean value\\
+  5D & bstoren & N & L & Store local boolean in higher frame\\
+  5E & bstoreg & G & & Store boolean in global table\\
+  5F & bstorea & & & Write boolean into array\\\pagebreak
+
+  60 & iinc & L & C & Increment local by constant\\
+  61 & iinc\_1 & L & & Increment local by one\\
+  62 & idec & L & C & Decrement local by constant\\
+  63 & idec\_1 & L & & Decrement local by one\\
+  64 & jump & O & & Jump by offset \\
+  65 & branch\_t & O & & Branch by offset if true \\
+  66 & branch\_f & O & & Branch by offset if false \\
+  67 & & & & ---\\
+  68 & isr & & & Initiate call to subroutine in current scope\\
+  69 & isrn & N & & Initiate call to subroutine in outer scope\\
+  6A & isrl & & & Initiate call to subroutine local to current scope\\
+  6B & isrg & & & Initiate call to global subroutine\\
+  6C & esr & L & & Enter subroutine \\
+  6D & jsr & A & O & Jump to subroutine\\
+  6E & jsre & I & & Jump to external subroutine\\
+  6F & return & & & Return from subroutine without function value\\
+  & & & &\\
+
+  70 & aload\_0 & & & Load local array reference \#0\\
+  71 & aload\_1 & & & Load local array reference \#1\\
+  72 & aload\_2 & & & Load local array reference \#2\\
+  73 & aload\_3 & & & Load local array reference \#3\\
+  74 & & & & ---\\
+  75 & & & & ---\\
+  76 & & & & ---\\
+  77 & & & & ---\\
+  78 & aload & L & & Load local array reference\\
+  79 & aloadn & N & L & Load local array reference from outer frame\\
+  7A & aloadg & G & & Load array reference from global table\\
+  7B & & & & ---\\
+  7C & astore & L & & Store local array reference\\
+  7D & & & & ---\\
+  7E & astoreg & G & & Store array reference in global table\\
+
+\end{xltabular}

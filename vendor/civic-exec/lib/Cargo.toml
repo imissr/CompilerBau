@@ -1,0 +1,6 @@
+[package]
+name = "libcivexec"
+description = "Libraray for the CiviC execution toolchain"
+authors = ["Eric Wintzler <eric.wintzler@uni-jena.de>"]
+edition = "2024"
+version = "1.1.0"

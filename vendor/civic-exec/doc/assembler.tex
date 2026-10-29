@@ -1,0 +1,135 @@
+\section{\civic{} Assembler (\civicas)}
+
+The Civilized Assembler \civicas{} constructs an executable module from an assembly input file consisting of pseudo instructions and the instructions described in \autoref{part:isa}. This chapter of this document describes the format of the assembly file and how its contents affects the generated module file. Appendix~\ref{appendix:asm_example} lists an example assembly file.
+
+\subsection{Assembly format}
+An assembly file consists of zero or more statements, separated by newlines. A statement is either an instruction, label definition or pseudo-instruction. Comments exist only as single-line comments; everything after a semicolon (\texttt{;}) on a line is ignored. Empty lines (after comments removal) are ignored. The assembler parses the file line-by-line.
+
+\subsubsection{Types}
+In certain pseudo-instructions, it is necessary to specify types of variables or parameters. The following types are supported:
+
+\begin{tabular}{lcl}
+\emph{Type} &$\Rightarrow$& \emph{BasicType} \\
+            &$\mid$& \emph{ArrayType} \\
+\emph{BasicType} &$\Rightarrow$& {\ttfamily int} \\
+                 &$\mid$& {\ttfamily float} \\
+                 &$\mid$& {\ttfamily bool} \\
+\emph{ArrayType} &$\Rightarrow$& \emph{BasicType} {\ttfamily []} \\
+\emph{RetType} &$\Rightarrow$& \emph{BasicType} \\
+               &$\mid$& {\ttfamily void} \\
+\end{tabular}
+
+In other words, there are the three basic types of integer, floating point and boolean, and a (potentially multi-dimensional) array type. The latter is specified by adding \texttt{[]} after the array's basic type.
+
+Finally, a \emph{return type} exists which can be any of the basic types, and \texttt{void}.
+
+\subsubsection{Function signatures}
+In some pseudo-instructions, a \emph{function signature} must be specified. A function signature consists of a quote-delimited string identifying the name, a return type, and a list of parameter types:
+
+\begin{tabular}{lcl}
+\emph{FunctionSignature} &$\Rightarrow$& \emph{Name} \emph{RetType} \emph{Type}$^*$ \\
+\emph{Name}              &$\Rightarrow$& \texttt{"} [\emph{any non-quote, non-newline character}]$^*$ \texttt{"} \\
+\end{tabular}
+
+\subsubsection{Labels}
+Labels identify offset in the code by name, absolving the programmer or compiler from having to calculate offset manually. Labels are defined on their own line and exist of a token, followed by a colon (\texttt{:}):
+
+\begin{tabular}{lcl}
+\emph{Label} &$\Rightarrow$& \emph{StringConst} \texttt{:} \\
+\end{tabular}
+
+A label is used by referring to its name in any (pseudo-) instruction that expects a label:
+
+\begin{tabular}{lcl}
+\emph{LabelRef} &$\Rightarrow$& \emph{StringConst} \\
+                &$\mid$& \emph{Integer} \\
+\end{tabular}
+
+Note that, as the grammar indicates, direct offsets in the form of (signed) integer values can be used instead of label references as well. However, label names must not be numbers. Additionally, the use of offsets instead of labels has to be enabled by a command line parameter.
+
+\subsection{Pseudo-instructions}
+
+\newenvironment{pseudo}[2] {
+    %\begin{minipage}{\textwidth}
+    \subsubsection{Pseudo instruction: #1}
+    \textbf{Format:} #2\par
+    \textbf{Description:}
+}{
+    %\end{minipage}
+    %\par\vspace{.5\baselineskip}\par
+}
+
+
+\begin{pseudo}{.exportfun}{
+    \texttt{.exportfun} \emph{FunctionSignature} \emph{LabelRef}
+}
+The \texttt{.exportfun} pseudo-instruction defines an entry in the module's \emph{function export table} which consists of a function signature and an offset in the module to the first instruction of the exported function.
+
+For instance, the following export definition:
+
+\qquad\texttt{.exportfun "foo" void int int[] foo}
+
+defines an export entry named ``foo'' that exports a function that takes an array of integers (the first \texttt{int} is the array dimension parameter, giving the size of the first dimension) and returns nothing (\texttt{void}). The offset in the code of the function is defined by label \texttt{foo}.
+\end{pseudo}
+
+
+\begin{pseudo}{.importfun}{
+    \texttt{.importfun} \emph{FunctionSignature}
+}
+The \texttt{.importfun} pseudo-instruction defines an entry in the module's \emph{function import table} which consists of a function signature.
+
+For instance, the following import definition:
+
+\qquad\texttt{.importfun "foo" void int int[]}
+
+defines an import entry that should, at load-time, be linked up with an external definition of a function named ``foo'' that takes an array of integers (the first \texttt{int} is the array dimension parameter, giving the size of the first) and returns nothing (\texttt{void}). Certain instructions can refer to this import entry by index to refer to externally defined functions.
+\end{pseudo}
+
+
+\begin{pseudo}{.exportvar}{
+    \texttt{.exportvar} \emph{Name} \emph{integer}
+}
+The \texttt{.exportvar} pseudo-instruction defines an entry in the module's
+\emph{variable export table} which consists of an export name and an index in
+the global table.
+
+For instance, the following export definition:
+
+\qquad\texttt{.exportvar "foo" 0}
+
+defines an export entry named ``foo'' that exports the variable at index 0 in the global table. Note that the type is not mentioned here, since that is already defined by the \texttt{.global} pseudo-instruction.
+\end{pseudo}
+
+
+\begin{pseudo}{.importvar}{
+    \texttt{.importvar} \emph{Name} \emph{Type}
+}
+The \texttt{.importvar} pseudo-instruction defines an entry in the module's \emph{variable import table} which consists of an export name and a variable type.
+
+For instance, the following import definition:
+
+\qquad\texttt{.importvar "foo" int}
+
+defines an import entry that should, at load-time, be linked up with an external definition of an integer variable named ``foo''. Certain instructions can refer to this import entry by index to refer to externally defined variables.
+\end{pseudo}
+
+
+\begin{pseudo}{.const}{
+    \texttt{.const} \emph{BasicType} \emph{value}
+}
+The \texttt{.const} pseudo-instruction defines an entry in the module's \emph{constants table} which consists of a type and value. The type can be an integer, floating-point or boolean type and the value is parsed accordingly. Integers and floating-point values are parsed similar to C. However, floating point values must have a decimal point, to distinguis them from integer values. Additionally, Boolean values must be \texttt{true} or \texttt{false}.
+
+Certain instructions can refer to entries in the constants table by index.
+\end{pseudo}
+
+
+\begin{pseudo}{.global}{
+    \texttt{.global} \emph{Type}
+}
+The \texttt{.global} pseudo-instruction defines an entry in the module's global table, which is defined by a type. Both basic types (integer, floating point and boolean) as well as array types can be used here. The global table is a table of typed, but uninitialised entries that can be read and written by instructions by index.
+\end{pseudo}
+
+\subsection{Instructions}
+If a line does not contain a label definition or pseudo-instruction, it is interpreted as in instruction. The first token should be the name of an instruction from \autoref{part:isa}. The rest of the tokens on the line are interpreted as the arguments to the instruction.
+
+All instructions in an assembly file are assembled into a sequence of bytes and appended (without padding) in the order in which they occur in the file into a stream of bytes which defines the module's executable code. Offsets in the global table are offsets from the beginning of this byte stream.

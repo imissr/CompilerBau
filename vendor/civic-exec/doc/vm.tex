@@ -1,0 +1,63 @@
+\section{\civic{} Virtual Machine (\civicvm)}
+
+The Civilized Virtual Machine \civicvm{} loads one or more module files as produced by the Civilized Assembler \civicas{} and executes them.
+
+\subsection{Order of operation}
+
+Specifically, the \civicvm{} performs the following steps:
+
+\begin{enumerate}
+    \item Load and verify all specified module files. This step involves parsing the module binary files, ensuring the input is valid and loading all elements into memory.
+
+    \item Initialize the global table in each module. The global table from the binary is used to set up the type information for the module's global value table. Note that the values themselves remain uninitialised.
+
+    \item Patch imports in each module. For every import entry, the \civicvm{} will look through all other modules, and built-in functions for a match on the function signature and connect the import entry to that found function. If a match cannot be found, the \civicvm{} will return an error.
+
+    \item Execute every module's \texttt{\_\_init} function, if any. The \texttt{\_\_init} function can be used to initialise globals and do other setup before \texttt{main}. Note that this function is not required to exist in a module.
+
+    \item Find and execute the \texttt{main} function. It is expected that exactly one main function exists in the given binary files. This function must be declared as export, has the name \texttt{main} and has no parameters and return type void.
+
+    %\item Return the return value from {\ttfamily main} as exit code.
+\end{enumerate}
+
+\subsection{Type Safety}
+
+Since the ISA contains typed instructions, the \civicvm{} verifies the type safety of instructions by ensuring that the data they operate on is of the correct type, as indicated by the instruction. If this is not the case, the \civicvm{} will abort execution with an error message indicating which instruction caused the invalid access.
+
+\subsection{Built-in Functions}
+
+The \civicvm{} defines several built-in functions that can be used as existing exported function by adding the appropriate import entry in a module. The functions are:
+
+\newenvironment{builtin}[2] {
+    %\begin{minipage}{\textwidth}
+    \subsubsection{Built-in function: #1}
+    {\bfseries Signature:} \texttt{#2} \par
+    \textbf{Description:} 
+}{
+    %\end{minipage}
+    %\par\vspace{4em}\par
+}
+
+\begin{builtin}{printInt}{
+    void printInt(int i);
+}
+The \texttt{printInt} function prints the signed integer argument to standard out in base 10. The number is prefixed with a minus sign if the value is negative.
+\end{builtin}
+
+\begin{builtin}{printFloat}{
+    void printFloat(float i);
+}
+The \texttt{printFloat} function prints the floating point value to standard out in base 10, decimal notation, with default precision. The number is prefixed with a minus sign if the value is negative.
+\end{builtin}
+
+\begin{builtin}{scanInt}{
+    int scanInt();
+}
+The \texttt{scanInt} prompts the user to enter an integer value on standard error, then reads the integer value from the standard input and returns it. If an invalid value was entered, \texttt{scanInt} returns 0.
+\end{builtin}
+
+\begin{builtin}{scanFloat}{
+    float scanFloat();
+}
+The \texttt{scanFloat} prompts the user to enter a floating point value on standard error, then reads the floating point value from the standard input and returns it. If an invalid value was entered, \texttt{scanFloat} returns 0.0.
+\end{builtin}
