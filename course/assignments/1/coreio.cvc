@@ -1,0 +1,46 @@
+// coreio.cvc
+extern void printInt(int v);
+extern void printSpaces(int n);
+extern void printNewlines(int n);
+extern int fib(int n);  // from core.cvc
+export void fibs(int n) {
+  int i;
+  i = 0;
+  while (i < n) {
+    printInt(fib(i));
+    if (i + 1 < n) printSpaces(1);
+    i = i + 1;
+  }
+  printNewlines(1);
+}
+export void primes(int n) {
+  int count;
+  int cand;
+  bool isprime_local(int m) {
+    int k;
+    bool div;
+    if (m < 2) return false;
+    if (m == 2) return true;
+    if ((m % 2) == 0) return false;
+    k = 3;
+    div = false;
+    while (k * k <= m && !div) {
+      if ((m % k) == 0)
+        div = true;
+      else
+        k = k + 2;
+    }
+    return !div;
+  }
+  count = 0;
+  cand = 2;
+  while (count < n) {
+    if (isprime_local(cand)) {
+      printInt(cand);
+      count = count + 1;
+      if (count < n) printSpaces(1);
+    }
+    cand = cand + 1;
+  }
+  printNewlines(1);
+}

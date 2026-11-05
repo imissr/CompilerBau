@@ -1,7 +1,7 @@
 /**
  * @file
  *
- * This file contains the code for the OptSubstraction traversal.
+ * This file contains the code for the OptSubstraction optimisation traversal.
  * The traversal has the uid: OS
  *
  *

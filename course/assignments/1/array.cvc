@@ -1,0 +1,128 @@
+// array.cvc
+extern void printInt(int v);
+extern void printFloat(float v);
+extern void printSpaces(int n);
+extern void printNewlines(int n);
+extern int scanInt();
+extern float scanFloat();
+
+export void printIntVec(int[n] vec) {
+  int i;
+  i = 0;
+  while (i < n) {
+    printInt(vec[i]);
+    if (i + 1 < n) printSpaces(1);
+    i = i + 1;
+  }
+  printNewlines(1);
+}
+export void printFloatVec(float[n] vec) {
+  int i;
+  i = 0;
+  while (i < n) {
+    printFloat(vec[i]);
+    if (i + 1 < n) printSpaces(1);
+    i = i + 1;
+  }
+  printNewlines(1);
+}
+export void printIntMat(int[m, n] mat) {
+  int i;
+  int j;
+  i = 0;
+  while (i < m) {
+    j = 0;
+    while (j < n) {
+      printInt(mat[i, j]);
+      if (j + 1 < n) printSpaces(1);
+      j = j + 1;
+    }
+    printNewlines(1);
+    i = i + 1;
+  }
+}
+export void printFloatMat(float[m, n] mat) {
+  int i;
+  int j;
+  i = 0;
+  while (i < m) {
+    j = 0;
+    while (j < n) {
+      printFloat(mat[i, j]);
+      if (j + 1 < n) printSpaces(1);
+      j = j + 1;
+    }
+    printNewlines(1);
+    i = i + 1;
+  }
+}
+export void scanIntVec(int[n] vec) {
+  int i;
+  i = 0;
+  while (i < n) {
+    vec[i] = scanInt();
+    i = i + 1;
+  }
+}
+export void scanFloatVec(float[n] vec) {
+  int i;
+  i = 0;
+  while (i < n) {
+    vec[i] = scanFloat();
+    i = i + 1;
+  }
+}
+export void scanIntMat(int[m, n] mat) {
+  int i;
+  int j;
+  i = 0;
+  while (i < m) {
+    j = 0;
+    while (j < n) {
+      mat[i, j] = scanInt();
+      j = j + 1;
+    }
+    i = i + 1;
+  }
+}
+
+export void scanFloatMat(float[m, n] mat) {
+  int i;
+  int j;
+  i = 0;
+  while (i < m) {
+    j = 0;
+    while (j < n) {
+      mat[i, j] = scanFloat();
+      j = j + 1;
+    }
+    i = i + 1;
+  }
+}
+
+ // Matrix multiply: c = a * b
+ // Dimensions are expected to be: a[m,n], b[n,p], c[m,p].
+ // The function signature uses generic symbols; caller must pass matching sizes.
+
+export void matMul(float[m, n] a, float[o, p] b, float[q, l] c) {
+   int i;
+   int j;
+   int k;
+   float acc;
+   i = 0;
+   while (i < m) {
+     j = 0;
+     while (j < p) {
+       acc = 0.0;
+       k = 0;
+       while (k < n) {
+          acc = acc + a[i, k] * b[k, j];
+          k = k + 1;
+       }
+       c[i, j] = acc;
+       j = j + 1;
+     }
+     i = i + 1;
+   }
+ }
+

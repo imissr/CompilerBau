@@ -9,8 +9,22 @@ sudo apt update && sudo apt install build-essential cmake bison flex graphviz
 ```
 For macOS, see [macOS dependencies](#macos-dependencies).
 
+To build the bundled CoCoNut sources and set up a compiler debug build, run
+`./compiler/configure.sh` from the repository root, or `./configure.sh` from this
+directory. Outputs go into `build/coconut/` and `build/compiler/` at the
+repository root. The script builds CoCoNut in release mode and the compiler in
+debug mode; running it again sets the compiler build type to `Debug`.
+
+Alternatively, run `make debug` or `make release` from this directory (or
+`make -C compiler debug` / `make -C compiler release` from the repository root).
+Both targets build CoCoNut first and reuse `build/compiler/` for the compiler;
+the last target determines its build type. Use `make help` to list all targets.
+`make dist` runs the local packaging script and creates `build/dist/civicc.tgz`.
+`make clean` deletes `build/compiler/`, `build/coconut/`, and `build/dist/`.
+To disable AddressSanitizer, use `make debug CMAKE_ARGS=-DDISABLE_ASAN=ON`.
+
 Build CoCoNut before configuring the compiler. Run these commands from the
-repository root (one directory above `compiler/`):
+repository root (one directory above `compiler/`) for a release build:
 
 ```bash
 cmake -S vendor/coconut -B build/coconut -DCMAKE_BUILD_TYPE=Release
@@ -31,6 +45,24 @@ pass `-DCOCONUT_BUILD_DIR=/path/to/build` or
 `-DCOCOGEN_DIR=/path/to/build/cocogen`.
 
 **IMPORTANT**: After cloning, you should change the remote to point to a **private** repo you control.
+
+## Assignment 2.1: strength reduction
+
+The `Optimisations` phase runs after the demo traversals and before printing.
+It contains the moved subtraction optimisation and the strength reduction
+traversal in `src/optimisations/`. Strength reduction rewrites `2 * k` and
+`k * 2` to `k + k` only when `k` is a variable node. Variable types are not yet
+represented in the starter AST, so an integer type check will require later
+type information.
+
+After building, run the regression test from the repository root:
+
+```bash
+ctest --test-dir build/compiler -R '^strength_reduction$' --output-on-failure
+```
+
+The test covers both operand orders, nested matches, nonmatching operands and
+operators, and the moved subtraction optimisation.
 
 ## VS Code support
 For syntax highlighting of the CoCoNut DSL files (e.g. the `main.ccn` file), you can install the [nutcracker](https://github.com/CoCoNut-UvA/nutcracker/) extension from the Visual Studio Marketplace [here](https://marketplace.visualstudio.com/items?itemName=CoCoNut-UvA.nutcracker).

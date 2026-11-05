@@ -24,6 +24,19 @@ Graphviz is needed for AST images. Open a terminal in the repository root,
 
 ### First build
 
+For an automatic setup using the bundled CoCoNut sources and a compiler debug
+build, run:
+
+```bash
+./compiler/configure.sh
+```
+
+The script builds CoCoNut in `build/coconut/` and the compiler in
+`build/compiler/`. It also works when called from another directory. Running it
+again sets the compiler build type to `Debug`.
+
+For a release build, run these commands instead:
+
 ```bash
 cmake -S vendor/coconut -B build/coconut -DCMAKE_BUILD_TYPE=Release
 cmake --build build/coconut
@@ -35,6 +48,24 @@ cmake --build build/compiler
 CoCoNut must be built first. The compiler automatically uses the bundled
 CoCoNut sources and the generator in `build/coconut/cocogen` when no installed
 CoCoNut package is found.
+
+### Make shortcuts
+
+The compiler Makefile provides these commands from the repository root:
+
+```bash
+make -C compiler help
+make -C compiler debug
+make -C compiler release
+make -C compiler dist
+make -C compiler clean
+```
+
+Both build targets build CoCoNut first and then configure and build the
+compiler. Debug and release reuse `build/compiler/`; the last target determines
+the build type. `dist` runs the local packaging script and writes
+`build/dist/civicc.tgz`. `clean` deletes `build/compiler/`, `build/coconut/`, and
+`build/dist/`.
 
 ### Rebuild after code changes
 
@@ -55,6 +86,21 @@ Run the supplied demo inputs:
 ./build/compiler/civicc compiler/test/test1.cvc
 ./build/compiler/civicc compiler/test/test2.cvc
 ```
+
+### Einstiegspunkt für die CiviC-VM
+
+Beim Ausführen erwartet die CiviC-VM genau eine exportierte Funktion `main`
+ohne Parameter und mit dem Rückgabetyp `void`:
+
+```c
+export void main() {
+    return;
+}
+```
+
+`int main()` wird von der VM nicht als Einstiegspunkt akzeptiert. Für Programme,
+die mit der CiviC-VM ausgeführt werden sollen, muss daher `export void main()`
+verwendet werden (siehe [CiviC-VM-Handbuch](docs/reference/civic-vm.pdf)).
 
 ### Generate an AST diagram
 

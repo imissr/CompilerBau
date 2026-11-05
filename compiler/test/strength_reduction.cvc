@@ -1,0 +1,15 @@
+left = (2 * k);
+right = (k * 2);
+factor = (3 * k);
+numbersLeft = (2 * 3);
+numbersRight = (3 * 2);
+twos = (2 * 2);
+expressionLeft = (2 * (k + 1));
+expressionRight = ((k + 1) * 2);
+boolLeft = (2 * true);
+boolRight = (true * 2);
+nested = ((2 * k) + (k * 2));
+subtract = (k - k);
+literalSubtract = (7 - 7);
+addition = (k + 2);
+division = (k / 2);

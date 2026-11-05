@@ -4,6 +4,7 @@ start phase RootPhase {
     actions {
         pass SPdoScanParse;
         Demo;
+        Optimisations;
         print;
     }
 };
@@ -26,9 +27,18 @@ phase Demo {
                 int sum
             }
         };
+    }
+};
 
+phase Optimisations {
+    actions {
         traversal OptSubstraction {
             uid = OS,
+            nodes = { Binop }
+        };
+
+        traversal StrengthReduction {
+            uid = SR,
             nodes = { Binop }
         };
     }

@@ -1,0 +1,15 @@
+__left=(__k+__k);
+__right=(__k+__k);
+__factor=(3*__k);
+__numbersLeft=(2*3);
+__numbersRight=(3*2);
+__twos=(2*2);
+__expressionLeft=(2*(__k+1));
+__expressionRight=((__k+1)*2);
+__boolLeft=(2*true);
+__boolRight=(true*2);
+__nested=((__k+__k)+(__k+__k));
+__subtract=0;
+__literalSubtract=0;
+__addition=(__k+2);
+__division=(__k/2);

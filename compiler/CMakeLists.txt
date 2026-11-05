@@ -16,6 +16,12 @@ foreach(TEST_GROUP basic nested_funs arrays)
         WORKING_DIRECTORY "${TEST_DIR}")
 endforeach()
 
+add_test(NAME strength_reduction
+    COMMAND "${CMAKE_COMMAND}"
+        "-DCOMPILER=$<TARGET_FILE:civicc>"
+        "-DTEST_DIR=${CMAKE_CURRENT_LIST_DIR}/test"
+        -P "${CMAKE_CURRENT_LIST_DIR}/test/check_strength_reduction.cmake"
+)
 
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
@@ -62,10 +68,13 @@ add_executable(
     src/scanparse/scanParse.c
     src/global/globals.c
 
-    # Youre free to remove the demo directory and these entries.
-    src/demo/opt_sub.c
+    # Demo traversals
     src/demo/sum_ints.c
     src/demo/rename_identifiers.c
+
+    # Optimisation traversals
+    src/optimisations/opt_sub.c
+    src/optimisations/strength_reduction.c
 )
 
 target_compile_options(civicc PRIVATE
