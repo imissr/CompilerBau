@@ -10,6 +10,7 @@ endif()
 
 # Compare expressions independently of the demo integer sum, locations, and spacing.
 string(REGEX REPLACE "^Sum of integers: [0-9-]+\n" "" output "${output}")
+string(REGEX REPLACE "// Arithmetic operators[^\n]*\n" "" output "${output}")
 string(REGEX REPLACE "\\([0-9]+:[0-9]+(-[0-9]+)?\\)" "" output "${output}")
 string(REGEX REPLACE "[ \t\r]" "" output "${output}")
 file(READ "${TEST_DIR}/strength_reduction.expected" expected)

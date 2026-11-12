@@ -3,6 +3,7 @@ start phase RootPhase {
 
     actions {
         pass SPdoScanParse;
+        CountOperators;
         Demo;
         Optimisations;
         print;
@@ -11,6 +12,18 @@ start phase RootPhase {
 
 traversal Print {
     uid = PRT
+};
+
+traversal CountOperators {
+    uid = OC,
+    nodes = { Program, Binop },
+    travdata {
+        int add_count,
+        int sub_count,
+        int mul_count,
+        int div_count,
+        int mod_count
+    }
 };
 
 phase Demo {
@@ -22,7 +35,7 @@ phase Demo {
 
         traversal SumInts {
             uid = SI,
-            nodes = { Stmts, Num },
+            nodes = { Program, Num },
             travdata {
                 int sum
             }
@@ -39,6 +52,11 @@ phase Optimisations {
 
         traversal StrengthReduction {
             uid = SR,
+            nodes = { Binop }
+        };
+
+        traversal SuperStrengthReduction {
+            uid = SSR,
             nodes = { Binop }
         };
     }
@@ -67,7 +85,22 @@ nodeset Stmt = {Assign};
 // Nodes you want to be able to link to from your symbol table.
 nodeset Link = Expr | Stmt;
 
-root node Stmts {
+root node Program {
+    children {
+        Stmts stmts { constructor, mandatory }
+    },
+
+    attributes {
+        int add_count,
+        int sub_count,
+        int mul_count,
+        int div_count,
+        int mod_count,
+        bool counts_valid
+    }
+};
+
+node Stmts {
     children {
         Stmt stmt { constructor, mandatory },
         Stmts next { constructor }

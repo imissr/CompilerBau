@@ -46,23 +46,82 @@ pass `-DCOCONUT_BUILD_DIR=/path/to/build` or
 
 **IMPORTANT**: After cloning, you should change the remote to point to a **private** repo you control.
 
-## Assignment 2.1: strength reduction
+## Assignment 2
 
-The `Optimisations` phase runs after the demo traversals and before printing.
-It contains the moved subtraction optimisation and the strength reduction
-traversal in `src/optimisations/`. Strength reduction rewrites `2 * k` and
-`k * 2` to `k + k` only when `k` is a variable node. Variable types are not yet
-represented in the starter AST, so an integer type check will require later
-type information.
+The pipeline is parsing → operator counting → demo traversals → optimisations
+→ pretty printing. The AST now has a dedicated `Program` root containing the
+statement list and arithmetic-operator statistics.
 
-After building, run the regression test from the repository root:
+### 2.1: Strength reduction
+
+The `Optimisations` phase contains subtraction optimisation, strength reduction,
+and super strength reduction. Their implementations are in `src/optimisations/`.
+The subtraction pass reduces `k - k` and equal integer-literal subtraction to
+zero. Strength reduction rewrites `2 * k` and `k * 2` to `k + k`.
+
+### 2.2: Parameterised super strength reduction
+
+Set the maximum integer factor with `--strength-reduction-max N` (short form
+`-r N`). The default is 2, preserving ordinary strength reduction. For example,
+from the repository root:
 
 ```bash
-ctest --test-dir build/compiler -R '^strength_reduction$' --output-on-failure
+./build/compiler/civicc --strength-reduction-max 4 compiler/test/super_strength_reduction.cvc
 ```
 
-The test covers both operand orders, nested matches, nonmatching operands and
-operators, and the moved subtraction optimisation.
+This additionally rewrites `3 * k` to `(k + k) + k` and `k * 4` to
+`((k + k) + k) + k`. The maximum is inclusive. Both operand orders and nested
+matches are supported. The limit must be a decimal integer from 2 to `INT_MAX`;
+invalid, missing, and overflowing values produce an error.
+
+Both reduction passes require a variable as the other operand. They leave
+literal multiplication, boolean operands, arbitrary expressions, and factors
+0 and 1 unchanged. Each repeated variable is a separate AST node. The starter
+AST has no variable type information; checking that a variable has integer type
+will require the type information introduced in later compiler work.
+
+### 2.3: Collecting operator counts
+
+`CountOperators` in `src/analysis/count_operators.c` counts `+`, `-`, `*`, `/`,
+and `%`, including nested expressions and all statements. It uses CoCoNut
+`travdata`, initialised for each traversal, and stores the five totals and a
+`counts_valid` flag on the `Program` root. There are no global counters.
+Counting runs before optimisations, so the totals describe the original source
+even when a subtraction disappears or multiplication becomes addition.
+
+The demo integer-sum traversal also uses the new root to print its summary
+once per compilation.
+
+### 2.4: Printing the root
+
+The print traversal prints the statistics followed by the statement list:
+
+```text
+// Arithmetic operators (source): +: 2, -: 3, *: 2, /: 1, %: 1
+```
+
+The statistics are omitted if counting has not run yet, for example when
+printing at the parser breakpoint:
+
+```bash
+./build/compiler/civicc -b SPdoScanParse compiler/test/test1.cvc
+./build/compiler/civicc -b CountOperators compiler/test/test1.cvc
+```
+
+### Run the Assignment 2 regressions
+
+From the repository root:
+
+```bash
+cmake --build build/compiler
+ctest --test-dir build/compiler -R '^(strength_reduction|assignment2\.)' --output-on-failure
+```
+
+From `compiler/test/`, use `../../build/compiler` as the test directory instead.
+The regressions cover both reduction passes, factor limits, invalid arguments,
+all five operator counts, nested expressions, zero counts, and printing before
+counts are available. The full public CiviC suites (`basic`, `nested_funs`, and
+`arrays`) require language features beyond the starter parser and currently fail.
 
 ## VS Code support
 For syntax highlighting of the CoCoNut DSL files (e.g. the `main.ccn` file), you can install the [nutcracker](https://github.com/CoCoNut-UvA/nutcracker/) extension from the Visual Studio Marketplace [here](https://marketplace.visualstudio.com/items?itemName=CoCoNut-UvA.nutcracker).

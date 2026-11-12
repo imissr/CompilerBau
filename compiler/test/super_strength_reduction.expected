@@ -1,0 +1,14 @@
+__left=((__k+__k)+__k);
+__right=((__k+__k)+__k);
+__limitLeft=(((__k+__k)+__k)+__k);
+__limitRight=(((__k+__k)+__k)+__k);
+__above=(5*__k);
+__two=(__k+__k);
+__one=(1*__k);
+__zero=(0*__k);
+__numbers=(3*4);
+__expressionLeft=(3*(__k+1));
+__expressionRight=((__k+1)*3);
+__boolLeft=(3*true);
+__boolRight=(true*3);
+__nested=(((__k+__k)+__k)+(((__k+__k)+__k)+__k));

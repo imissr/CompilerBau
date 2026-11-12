@@ -87,6 +87,17 @@ Run the supplied demo inputs:
 ./build/compiler/civicc compiler/test/test2.cvc
 ```
 
+For Assignment 2, use `--strength-reduction-max N` (or `-r N`) to expand
+variable multiplications with integer factors up to `N` (default: 2).
+The compiler also prints counts of the five arithmetic operators in the source.
+See the [Assignment 2 implementation and tests](compiler/README.md#assignment-2).
+
+Run its regression tests with:
+
+```bash
+ctest --test-dir build/compiler -R '^(strength_reduction|assignment2\.)' --output-on-failure
+```
+
 ### Einstiegspunkt für die CiviC-VM
 
 Beim Ausführen erwartet die CiviC-VM genau eine exportierte Funktion `main`

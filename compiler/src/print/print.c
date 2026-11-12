@@ -12,6 +12,18 @@
 #include "ccngen/trav.h"
 #include "palm/dbug.h"
 
+node_st *PRTprogram(node_st *node)
+{
+    if (PROGRAM_COUNTS_VALID(node)) {
+        printf("// Arithmetic operators (source): +: %d, -: %d, *: %d, /: %d, %%: %d\n",
+               PROGRAM_ADD_COUNT(node), PROGRAM_SUB_COUNT(node),
+               PROGRAM_MUL_COUNT(node), PROGRAM_DIV_COUNT(node),
+               PROGRAM_MOD_COUNT(node));
+    }
+    TRAVstmts(node);
+    return node;
+}
+
 /**
  * @fn PRTstmts
  */

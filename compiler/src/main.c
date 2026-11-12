@@ -4,6 +4,8 @@
 #include <getopt.h>
 #include <ctype.h>
 #include <string.h>
+#include <errno.h>
+#include <limits.h>
 
 #include "global/globals.h"
 #include "palm/str.h"
@@ -22,6 +24,7 @@ void Usage(char *program) {
     printf("  --verbose/-v                 Enable verbose mode.\n");
     printf("  --breakpoint/-b <breakpoint> Set a breakpoint.\n");
     printf("  --structure/-s               Pretty print the structure of the compiler.\n");
+    printf("  --strength-reduction-max/-r N  Expand variable multiplications up to N (N >= 2, default: 2).\n");
 }
 
 
@@ -34,13 +37,14 @@ static int ProcessArgs(int argc, char *argv[])
         {"output",  required_argument, 0, 'o'},
         {"breakpoint", required_argument, 0, 'b'},
         {"structure", no_argument, 0, 's'},
+        {"strength-reduction-max", required_argument, 0, 'r'},
         {0, 0, 0, 0}};
 
   int option_index;
   int c;
 
   while (1) {
-      c = getopt_long(argc, argv, "hsvo:b:", long_options, &option_index);
+      c = getopt_long(argc, argv, "hsvo:b:r:", long_options, &option_index);
 
       // End of options
       if (c == -1)
@@ -64,6 +68,19 @@ static int ProcessArgs(int argc, char *argv[])
       case 'o':
         global.output_file = optarg;
         break;
+      case 'r': {
+        char *end;
+        errno = 0;
+        long limit = strtol(optarg, &end, 10);
+        if (!isdigit((unsigned char)optarg[0]) || *end != '\0' ||
+            errno == ERANGE || limit < 2 || limit > INT_MAX) {
+            fprintf(stderr, "--strength-reduction-max requires an integer from 2 to %d.\n",
+                    INT_MAX);
+            exit(EXIT_FAILURE);
+        }
+        global.strength_reduction_max = (int)limit;
+        break;
+      }
       case 'h':
         Usage(argv[0]);
         exit(EXIT_SUCCESS);

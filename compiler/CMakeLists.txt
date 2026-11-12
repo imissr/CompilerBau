@@ -23,6 +23,15 @@ add_test(NAME strength_reduction
         -P "${CMAKE_CURRENT_LIST_DIR}/test/check_strength_reduction.cmake"
 )
 
+foreach(ASSIGNMENT2_CASE operator_counts root_without_counts super_strength_reduction cli)
+    add_test(NAME "assignment2.${ASSIGNMENT2_CASE}"
+        COMMAND "${CMAKE_COMMAND}"
+            "-DCOMPILER=$<TARGET_FILE:civicc>"
+            "-DTEST_DIR=${CMAKE_CURRENT_LIST_DIR}/test"
+            "-DCASE=${ASSIGNMENT2_CASE}"
+            -P "${CMAKE_CURRENT_LIST_DIR}/test/check_assignment2.cmake")
+endforeach()
+
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 find_package(coconut QUIET CONFIG)
@@ -67,6 +76,7 @@ add_executable(
     src/print/print.c
     src/scanparse/scanParse.c
     src/global/globals.c
+    src/analysis/count_operators.c
 
     # Demo traversals
     src/demo/sum_ints.c
@@ -75,6 +85,7 @@ add_executable(
     # Optimisation traversals
     src/optimisations/opt_sub.c
     src/optimisations/strength_reduction.c
+    src/optimisations/super_strength_reduction.c
 )
 
 target_compile_options(civicc PRIVATE

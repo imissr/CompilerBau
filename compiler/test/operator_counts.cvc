@@ -1,0 +1,9 @@
+plus = (a + b);
+minus = (a - b);
+multiply = (2 * k);
+divide = (a / b);
+modulo = (a % b);
+nested = ((a + b) * (c - d));
+removed = (k - k);
+relation = (a < b);
+logic = ((a < b) && (c == d));

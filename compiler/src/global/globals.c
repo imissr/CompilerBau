@@ -10,6 +10,7 @@ struct globals global;
 void GLBinitializeGlobals()
 {
     global.col = 0;
+    global.strength_reduction_max = 2;
     global.line = 0;
     global.input_file = NULL;
     global.output_file = NULL;

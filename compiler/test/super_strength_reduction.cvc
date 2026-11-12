@@ -1,0 +1,14 @@
+left = (3 * k);
+right = (k * 3);
+limitLeft = (4 * k);
+limitRight = (k * 4);
+above = (5 * k);
+two = (2 * k);
+one = (1 * k);
+zero = (0 * k);
+numbers = (3 * 4);
+expressionLeft = (3 * (k + 1));
+expressionRight = ((k + 1) * 3);
+boolLeft = (3 * true);
+boolRight = (true * 3);
+nested = ((3 * k) + (k * 4));

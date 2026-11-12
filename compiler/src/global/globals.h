@@ -7,6 +7,7 @@ struct globals {
     int line;
     int col;
     int verbose;
+    int strength_reduction_max;
     char *input_file;
     char *output_file;
 };
