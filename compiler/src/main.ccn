@@ -4,6 +4,7 @@ start phase RootPhase {
     actions {
         pass SPdoScanParse;
         CountOperators;
+        CountIdentifiers;
         Demo;
         Optimisations;
         print;
@@ -23,6 +24,15 @@ traversal CountOperators {
         int mul_count,
         int div_count,
         int mod_count
+    }
+};
+
+// cocunute needs CIvar,CIvarlet, CIprogram ,CIfini,CIinit ...
+traversal CountIdentifiers{
+    uid = CI,
+    nodes = { Program, Var, VarLet},
+    travdata { 
+        user htable_stptr ids
     }
 };
 
@@ -78,6 +88,7 @@ enum BinOpType {
         and, or
     }
 };
+
 
 nodeset Expr = {Num, Float, Bool, Binop, Var};
 nodeset Stmt = {Assign};

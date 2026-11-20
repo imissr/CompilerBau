@@ -9,6 +9,7 @@ if(NOT "${result}" STREQUAL "0")
 endif()
 
 # Compare expressions independently of the demo integer sum, locations, and spacing.
+string(REGEX REPLACE "// Identifier occurrences[^\n]*\n" "" output "${output}")
 string(REGEX REPLACE "^Sum of integers: [0-9-]+\n" "" output "${output}")
 string(REGEX REPLACE "// Arithmetic operators[^\n]*\n" "" output "${output}")
 string(REGEX REPLACE "\\([0-9]+:[0-9]+(-[0-9]+)?\\)" "" output "${output}")

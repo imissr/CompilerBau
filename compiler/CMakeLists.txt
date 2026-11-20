@@ -77,6 +77,7 @@ add_executable(
     src/scanparse/scanParse.c
     src/global/globals.c
     src/analysis/count_operators.c
+    src/analysis/count_identifiers.c
 
     # Demo traversals
     src/demo/sum_ints.c

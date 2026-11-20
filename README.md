@@ -63,8 +63,10 @@ make -C compiler clean
 
 Both build targets build CoCoNut first and then configure and build the
 compiler. Debug and release reuse `build/compiler/`; the last target determines
-the build type. `dist` runs the local packaging script and writes
-`build/dist/civicc.tgz`. `clean` deletes `build/compiler/`, `build/coconut/`, and
+the build type. `dist` runs `compiler/scripts/dist.sh` and writes
+`build/dist/civicc.tgz`, containing `compiler/`, `vendor/`, and the root
+`README.md`. You can also run `./compiler/scripts/dist.sh` directly from any
+directory. `clean` deletes `build/compiler/`, `build/coconut/`, and
 `build/dist/`.
 
 ### Rebuild after code changes
