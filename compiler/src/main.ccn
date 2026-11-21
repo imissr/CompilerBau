@@ -89,6 +89,15 @@ enum BinOpType {
     }
 };
 
+// added basictype and supported by civic consider that float is 64 bit
+enum BasicType {
+    prefix = BT,
+    values {
+        void, bool ,int ,float
+    }
+};
+
+
 
 nodeset Expr = {Num, Float, Bool, Binop, Var};
 nodeset Stmt = {Assign};
@@ -96,20 +105,24 @@ nodeset Stmt = {Assign};
 // Nodes you want to be able to link to from your symbol table.
 nodeset Link = Expr | Stmt;
 
+
+// programm hold a list of delceration
 root node Program {
     children {
-        Stmts stmts { constructor, mandatory }
+        Decls decls { constructor, mandatory }
     },
-
-    attributes {
-        int add_count,
-        int sub_count,
-        int mul_count,
-        int div_count,
-        int mod_count,
-        bool counts_valid
-    }
 };
+
+//based on the grammer we have the following type : figuer 1
+nodeset Decl = {FunDef, FunDec, GlobalDef, GlobalDec};
+
+
+node Decls {
+    children{
+        Decls decl {constructor , mandatory},
+        Decls next {constructor} // pointer on the next decl int the list (linked list style).
+    }
+}; 
 
 node Stmts {
     children {
@@ -135,6 +148,9 @@ node Binop {
         BinOpType op { constructor }
     }
 };
+
+
+
 
 nodeset Vars {
     nodes = {VarLet, Var},
