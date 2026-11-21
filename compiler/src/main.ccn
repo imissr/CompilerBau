@@ -89,15 +89,6 @@ enum BinOpType {
     }
 };
 
-// added basictype and supported by civic consider that float is 64 bit
-enum BasicType {
-    prefix = BT,
-    values {
-        void, bool ,int ,float
-    }
-};
-
-
 
 nodeset Expr = {Num, Float, Bool, Binop, Var};
 nodeset Stmt = {Assign};
@@ -106,11 +97,28 @@ nodeset Stmt = {Assign};
 nodeset Link = Expr | Stmt;
 
 
+// Type ⇒ BasicType , BasicType ⇒ bool | int | float
+enum BasicType {
+    prefix = BT,
+    values {
+        bool ,int ,float
+    }
+};
+
+
+// RetType ⇒ void | BasicType
+enum RetType {                   
+    prefix = RT,
+    values { void, bool, int, float }
+};
+
+
+
 // programm hold a list of delceration
 root node Program {
     children {
         Decls decls { constructor, mandatory }
-    },
+    }
 };
 
 //based on the grammer we have the following type : figuer 1
@@ -123,6 +131,104 @@ node Decls {
         Decls next {constructor} // pointer on the next decl int the list (linked list style).
     }
 }; 
+
+// RetType Id ( [Param, ...] )
+node FunHeader {
+    children {
+        Params params { constructor }           // optional for example f() has none
+    },
+
+    attributes {
+        RetType type  { constructor },            // return type, can be void
+        string name { constructor }
+    }
+};
+
+// [export] FunHeader { FunBody }
+// here the compiler needs to know if export exists or doesnt exists :  Two FunDef nodes can differ
+node FunDef { 
+    children{
+        FunHeader header { constructor, mandatory }, 
+        FunBody body { constructor, mandatory } // it must have a body 
+    },
+    attributes{   
+        bool export { constructor }
+    }
+};
+
+// extern RetType Id ( Params ) ;
+// extern is not definied Because extern is always there on a declaration, and a value that never changes carries no information.
+node FunDec {
+    children {
+        FunHeader header { constructor, mandatory }
+    }
+};
+
+// [export] Type Id [ = Expr ] ;
+node GlobalDef{
+    children{
+        Expr init { constructor }
+    },
+    attributes{
+        BasicType type { constructor },
+        string name { constructor },
+        bool export { constructor }
+    }
+};
+
+// extern Type Id ;
+node GlobalDec{
+    attributes{
+        BasicType type { constructor },
+        string name { constructor }
+    }
+};
+
+// linked list of paramters
+node Params {
+    children {
+        Param param { constructor, mandatory },
+        Params next { constructor }
+    }
+};
+
+// the parameter node 
+node Param {
+    attributes {
+        BasicType type  { constructor },
+        string name { constructor }
+    }
+};
+
+// linked list of VarDecls
+node VarDecls {
+    children {
+        VarDecl decl  { constructor, mandatory },
+        VarDecls next { constructor }
+    }
+};
+
+// Type Id [ = Expr ] ;
+node VarDecl {
+    children {
+        Expr init { constructor }
+    },
+
+    attributes {
+        Types type  { constructor },
+        string name { constructor }
+    }
+};
+
+
+// [VarDec]* [Statement]*
+node FunBody {
+    children {
+        VarDecls decls { constructor },         // can be empty
+        Stmts stmts    { constructor }          // can be empty
+    }
+};
+
 
 node Stmts {
     children {
